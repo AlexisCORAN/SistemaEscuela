@@ -511,14 +511,12 @@ public class DialogNuevaMatricula extends javax.swing.JDialog {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        // Aplica el aspecto visual nativo del sistema operativo donde se ejecuta la app
         try {
             javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
             logger.log(java.util.logging.Level.SEVERE, "No se pudo aplicar el tema nativo del sistema", ex);
         }
 
-        /* Crea y muestra la ventana principal */
         java.awt.EventQueue.invokeLater(() -> new VentanaPrincipal().setVisible(true));
     }
 

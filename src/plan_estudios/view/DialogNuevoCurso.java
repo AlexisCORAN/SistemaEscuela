@@ -1,13 +1,10 @@
 package plan_estudios.view;
 
-import docentes.controller.DocenteController;
-import docentes.dao.DocenteDAOImpl;
 import docentes.model.Docente;
 import java.util.ArrayList;
 import java.util.List;
 import main.VentanaPrincipal;
 import plan_estudios.controller.CursoController;
-import plan_estudios.controller.GradoController;
 import plan_estudios.model.Curso;
 import plan_estudios.model.Grado;
 

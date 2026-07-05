@@ -8,13 +8,14 @@ import java.util.List;
 import notas.model.RegistroBimestral;
 import shared.JdbcTemplate;
 import shared.RowMappers;
-import config.ConexionDB;
 import java.util.Collections;
 /**
  *
  * @author Alexis
  */
 public class RegistroBimestralDAOImpl implements IRegistroBimestralDAO {
+
+    private static final double NOTA_MINIMA_APROBATORIA = 11.0;
 
     private final Connection conexion;
 
@@ -28,8 +29,8 @@ public class RegistroBimestralDAOImpl implements IRegistroBimestralDAO {
         "LEFT JOIN Matricula m ON mc.idMatricula = m.idMatricula " +
         "LEFT JOIN Alumno a ON m.idAlumno = a.idAlumno";
 
-    public RegistroBimestralDAOImpl() {
-        this.conexion = ConexionDB.getInstance().getConexion();
+    public RegistroBimestralDAOImpl(final Connection conexion) {
+        this.conexion = conexion;
     }
 
     @Override
@@ -51,20 +52,20 @@ public class RegistroBimestralDAOImpl implements IRegistroBimestralDAO {
         String sql = "INSERT INTO RegistroBimestral (idMatriculaCurso, bimestre, estado) VALUES (?, ?, ?)";
         return JdbcTemplate.update(conexion, sql,
                 entidad.getMatriculaCurso() != null ? entidad.getMatriculaCurso().getId() : null,
-                entidad.getBimestre(),
-                entidad.getActivo() ? "ABIERTO" : "CERRADO") > 0;
+                entidad.getBimestre() != null ? entidad.getBimestre().getValorId() : null,
+                entidad.isActivo() ? "ABIERTO" : "CERRADO") > 0;
     }
 
     @Override
     public boolean actualizar(RegistroBimestral entidad) {
         if (conexion == null || entidad == null || entidad.getId() == null) return false;
         String sql = "UPDATE RegistroBimestral SET idMatriculaCurso = ?, bimestre = ?, estado = ?, fechaCierre = ? WHERE idRegistroBimestral = ?";
-        java.sql.Timestamp fechaCierre = entidad.getActivo() ? null : new java.sql.Timestamp(System.currentTimeMillis());
-        
+        java.sql.Timestamp fechaCierre = entidad.isActivo() ? null : new java.sql.Timestamp(System.currentTimeMillis());
+
         return JdbcTemplate.update(conexion, sql,
                 entidad.getMatriculaCurso() != null ? entidad.getMatriculaCurso().getId() : null,
-                entidad.getBimestre(),
-                entidad.getActivo() ? "ABIERTO" : "CERRADO",
+                entidad.getBimestre() != null ? entidad.getBimestre().getValorId() : null,
+                entidad.isActivo() ? "ABIERTO" : "CERRADO",
                 fechaCierre,
                 entidad.getId()) > 0;
     }
@@ -72,10 +73,10 @@ public class RegistroBimestralDAOImpl implements IRegistroBimestralDAO {
     @Override
     public boolean eliminar(Object id) {
         if (conexion == null || id == null) return false;
-        
+
         String sqlHijos = "DELETE FROM Evaluacion WHERE idRegistroBimestral = ?";
         JdbcTemplate.update(conexion, sqlHijos, id);
-        
+
         String sqlCabecera = "DELETE FROM RegistroBimestral WHERE idRegistroBimestral = ?";
         return JdbcTemplate.update(conexion, sqlCabecera, id) > 0;
     }
@@ -83,7 +84,6 @@ public class RegistroBimestralDAOImpl implements IRegistroBimestralDAO {
     @Override
     public List<RegistroBimestral> listarPorMatriculaCurso(Integer idMatriculaCurso) {
         if (conexion == null || idMatriculaCurso == null) return Collections.emptyList();
-        // CORREGIDO: Se aplica la constante SELECT_BASE con los alias requeridos por el IRowMapper
         String sql = SELECT_BASE + " WHERE rb.idMatriculaCurso = ?";
         return JdbcTemplate.query(conexion, sql, RowMappers.REGISTRO_BIMESTRAL_ROW_MAPPER, idMatriculaCurso);
     }
@@ -114,5 +114,63 @@ public class RegistroBimestralDAOImpl implements IRegistroBimestralDAO {
         if (conexion == null || idMatriculaCurso == null) return false;
         String sql = "UPDATE MatriculaCurso SET notaFinal = ? WHERE idMatriculaCurso = ?";
         return JdbcTemplate.update(conexion, sql, notaFinal, idMatriculaCurso) > 0;
+    }
+
+    @Override
+    public List<Object[]> listarNotasParaTabla(int idGrado, int idCurso, int bimestre) {
+        if (conexion == null) return Collections.emptyList();
+
+        String sql = "SELECT rb.idRegistroBimestral, m.codigoMatricula, a.apellidos + ', ' + a.nombres AS alumnoNombre, " +
+                     "       MAX(CASE WHEN e.tipo = 'PRACTICA' THEN e.nota ELSE 0 END) as practica, " +
+                     "       MAX(CASE WHEN e.tipo = 'TAREA' THEN e.nota ELSE 0 END) as tarea, " +
+                     "       MAX(CASE WHEN e.tipo = 'PARCIAL' THEN e.nota ELSE 0 END) as parcial, " +
+                     "       MAX(CASE WHEN e.tipo = 'BIMESTRAL' THEN e.nota ELSE 0 END) as bimestral " +
+                     "FROM RegistroBimestral rb " +
+                     "INNER JOIN MatriculaCurso mc ON rb.idMatriculaCurso = mc.idMatriculaCurso " +
+                     "INNER JOIN Matricula m ON mc.idMatricula = m.idMatricula " +
+                     "INNER JOIN Alumno a ON m.idAlumno = a.idAlumno " +
+                     "LEFT JOIN Evaluacion e ON rb.idRegistroBimestral = e.idRegistroBimestral " +
+                     "WHERE m.idGrado = ? AND mc.idCurso = ? AND rb.bimestre = ? " +
+                     "GROUP BY rb.idRegistroBimestral, m.codigoMatricula, a.apellidos, a.nombres";
+
+        return JdbcTemplate.query(conexion, sql, rs -> new Object[] {
+                rs.getInt("idRegistroBimestral"),
+                rs.getString("codigoMatricula"),
+                rs.getString("alumnoNombre"),
+                rs.getDouble("practica"),
+                rs.getDouble("tarea"),
+                rs.getDouble("parcial"),
+                rs.getDouble("bimestral")
+        }, idGrado, idCurso, bimestre);
+    }
+
+    @Override
+    public List<Object[]> listarAlumnosEnRiesgo(int idGrado, int bimestre) {
+        if (conexion == null) return Collections.emptyList();
+
+        String sql = "SELECT a.dni, a.apellidos + ', ' + a.nombres AS alumno, c.nombre AS curso, " +
+                     "       (MAX(CASE WHEN e.tipo = 'PRACTICA' THEN e.nota ELSE 0 END)*0.2 + " +
+                     "        MAX(CASE WHEN e.tipo = 'TAREA' THEN e.nota ELSE 0 END)*0.2 + " +
+                     "        MAX(CASE WHEN e.tipo = 'PARCIAL' THEN e.nota ELSE 0 END)*0.3 + " +
+                     "        MAX(CASE WHEN e.tipo = 'BIMESTRAL' THEN e.nota ELSE 0 END)*0.3) AS promedio " +
+                     "FROM RegistroBimestral rb " +
+                     "INNER JOIN MatriculaCurso mc ON rb.idMatriculaCurso = mc.idMatriculaCurso " +
+                     "INNER JOIN Matricula m ON mc.idMatricula = m.idMatricula " +
+                     "INNER JOIN Alumno a ON m.idAlumno = a.idAlumno " +
+                     "INNER JOIN Curso c ON mc.idCurso = c.idCurso " +
+                     "LEFT JOIN Evaluacion e ON rb.idRegistroBimestral = e.idRegistroBimestral " +
+                     "WHERE m.idGrado = ? AND rb.bimestre = ? " +
+                     "GROUP BY a.dni, a.apellidos, a.nombres, c.nombre " +
+                     "HAVING (MAX(CASE WHEN e.tipo = 'PRACTICA' THEN e.nota ELSE 0 END)*0.2 + " +
+                     "        MAX(CASE WHEN e.tipo = 'TAREA' THEN e.nota ELSE 0 END)*0.2 + " +
+                     "        MAX(CASE WHEN e.tipo = 'PARCIAL' THEN e.nota ELSE 0 END)*0.3 + " +
+                     "        MAX(CASE WHEN e.tipo = 'BIMESTRAL' THEN e.nota ELSE 0 END)*0.3) < ?";
+
+        return JdbcTemplate.query(conexion, sql, rs -> new Object[] {
+                rs.getString("dni"),
+                rs.getString("alumno"),
+                rs.getString("curso"),
+                rs.getDouble("promedio")
+        }, idGrado, bimestre, NOTA_MINIMA_APROBATORIA);
     }
 }

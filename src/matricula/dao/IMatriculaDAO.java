@@ -14,7 +14,7 @@ import shared.CrudDAO;
 public interface IMatriculaDAO extends CrudDAO<Matricula> {
     Matricula obtenerMatriculaActiva(String codigoEstudiante, int añoEscolar);
     List<Matricula> listarPorGradoAño(int idGrado, int añoEscolar);
-    List<Grado> listarGradosConCursos(); // Nuevo método contractual añadido
+    List<Grado> listarGradosConCursos();
     boolean anularMatricula(Integer idMatricula);
     String obtenerUltimoCodigo();
 }

@@ -8,7 +8,6 @@ import java.util.List;
 import plan_estudios.model.Curso;
 import shared.JdbcTemplate;
 import shared.RowMappers;
-import config.ConexionDB;
 import java.util.Collections;
 
 /**

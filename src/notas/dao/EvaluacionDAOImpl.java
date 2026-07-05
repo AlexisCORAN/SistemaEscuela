@@ -8,7 +8,6 @@ import java.util.List;
 import notas.model.Evaluacion;
 import shared.JdbcTemplate;
 import shared.RowMappers;
-import config.ConexionDB;
 import java.util.Collections;
 /**
  *
@@ -19,10 +18,22 @@ public class EvaluacionDAOImpl implements IEvaluacionDAO {
     
     private final Connection conexion;
 
-    public EvaluacionDAOImpl() {
-        this.conexion = ConexionDB.getInstance().getConexion();
+    public EvaluacionDAOImpl(Connection conexion) {
+        this.conexion = conexion;
     }
 
+    @Override
+    public boolean insertar(Evaluacion entidad) {
+        if (conexion == null || entidad == null) return false;
+        String sql = "INSERT INTO Evaluacion (idRegistroBimestral, nombre, tipo, nota, peso) VALUES (?, ?, ?, ?, ?)";
+        return JdbcTemplate.update(conexion, sql, 
+                entidad.getRegistroBimestral().getId(), 
+                entidad.getNombre(), 
+                entidad.getTipo().name(), 
+                entidad.getNota(), 
+                entidad.getPeso()) > 0;
+    }
+    
     @Override
     public List<Evaluacion> listarTodos() {
         if (conexion == null) return Collections.emptyList();
@@ -37,25 +48,19 @@ public class EvaluacionDAOImpl implements IEvaluacionDAO {
         return JdbcTemplate.queryForObject(conexion, sql, RowMappers.EVALUACION_ROW_MAPPER, id);
     }
 
-    @Override
-    public boolean insertar(Evaluacion entidad) {
-        if (conexion == null || entidad == null) return false;
-        String sql = "INSERT INTO Evaluacion (idRegistroBimestral, nombre, tipo, nota, peso) VALUES (?, ?, ?, ?, ?)";
-        return JdbcTemplate.update(conexion, sql, null, entidad.getNombre(), entidad.getTipo().toString(), entidad.getNota(), entidad.getPeso()) > 0;
-    }
 
     @Override
     public boolean insertarConCabecera(Evaluacion entidad, Integer idRegistroBimestral) {
         if (conexion == null || entidad == null || idRegistroBimestral == null) return false;
         String sql = "INSERT INTO Evaluacion (idRegistroBimestral, nombre, tipo, nota, peso) VALUES (?, ?, ?, ?, ?)";
-        return JdbcTemplate.update(conexion, sql, idRegistroBimestral, entidad.getNombre(), entidad.getTipo().toString(), entidad.getNota(), entidad.getPeso()) > 0;
+        return JdbcTemplate.update(conexion, sql, idRegistroBimestral, entidad.getNombre(), entidad.getTipo().name(), entidad.getNota(), entidad.getPeso()) > 0;
     }
 
     @Override
     public boolean actualizar(Evaluacion entidad) {
         if (conexion == null || entidad == null || entidad.getId() == null) return false;
         String sql = "UPDATE Evaluacion SET nombre = ?, tipo = ?, nota = ?, peso = ? WHERE idEvaluacion = ?";
-        return JdbcTemplate.update(conexion, sql, entidad.getNombre(), entidad.getTipo().toString(), entidad.getNota(), entidad.getPeso(), entidad.getId()) > 0;
+        return JdbcTemplate.update(conexion, sql, entidad.getNombre(), entidad.getTipo().name(), entidad.getNota(), entidad.getPeso(), entidad.getId()) > 0;
     }
 
     @Override

@@ -20,14 +20,11 @@ import config.ConexionDB;
  */
 public class AlumnoController {
 
-    // Ya no necesitamos DAOs globales ni constructor. 
-    // Cada método gestionará su propio ciclo de vida.
     public AlumnoController() {
     }
 
     public List<Alumno> obtenerAlumnos() {
         try {
-            // Métodos de solo lectura no necesitan apagar el auto-commit
             final Connection conn = ConexionDB.getInstance().getConexion();
             final IAlumnoDAO alumnoDAO = new AlumnoDAOImpl(conn);
             return alumnoDAO.listarTodos();
@@ -108,7 +105,6 @@ public class AlumnoController {
         Connection conn = null;
         try {
             conn = ConexionDB.getInstance().getConexion();
-            // Apagamos auto-commit porque modificaremos dos tablas
             conn.setAutoCommit(false);
 
             final IApoderadoDAO apoderadoDAO = new ApoderadoDAOImpl(conn);
@@ -124,7 +120,6 @@ public class AlumnoController {
                 return false;
             }
 
-            // Todo salió bien, guardamos los cambios
             conn.commit();
             return true;
 
@@ -154,7 +149,6 @@ public class AlumnoController {
             final IAlumnoDAO alumnoDAO = new AlumnoDAOImpl(conn);
             
             alumno.setActivo(false); 
-            // Como solo afecta a una tabla, el auto-commit por defecto es suficiente
             return alumnoDAO.actualizar(alumno);
         } catch (final Exception e) {
             System.err.println("Error al procesar baja: " + e.getMessage());

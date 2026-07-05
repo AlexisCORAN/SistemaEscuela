@@ -17,7 +17,6 @@ public class ConexionDB {
     private Connection conexion;
     private static boolean alertaMostrada = false;
     
-    // Cadena de conexión profesional y limpia
     private final String url = "jdbc:sqlserver://localhost:1433;"
                              + "databaseName=ColegioDB;"
                              + "user=sa;"
@@ -29,13 +28,11 @@ public class ConexionDB {
         try {
             this.conexion = DriverManager.getConnection(url);
             System.out.println("¡Conexión exitosa a ColegioDB en Docker!");
-            // Si conecta con éxito, reiniciamos la alerta por si se cae después
             alertaMostrada = false; 
             
         } catch (SQLException e) {
             this.conexion = null;
 
-            // SOLO si no se ha mostrado la alerta antes, la pintamos en pantalla
             if (!alertaMostrada) {
                 alertaMostrada = true; // Marcamos que ya se mostró una vez
                 

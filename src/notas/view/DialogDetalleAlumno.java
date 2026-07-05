@@ -5,7 +5,6 @@ import javax.swing.table.DefaultTableModel;
 import main.VentanaPrincipal;
 import notas.model.Evaluacion;
 import notas.model.RegistroBimestral;
-import shared.TipoEvaluacion;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -40,7 +39,7 @@ public class DialogDetalleAlumno extends javax.swing.JDialog {
     private void cargarHistorialEnTabla(List<RegistroBimestral> historial) {
         DefaultTableModel modelo = (DefaultTableModel) panelDatosAlumnoRiesgo.getModel();
         modelo.setRowCount(0);
-
+ 
         for (RegistroBimestral rb : historial) {
             double practicas = 0, tareas = 0, parcial = 0, bimestral = 0;
             
@@ -62,7 +61,7 @@ public class DialogDetalleAlumno extends javax.swing.JDialog {
                         break;
                 }
 }
-
+ 
             modelo.addRow(new Object[]{
                 "Bimestre " + rb.getBimestre(),
                 rb.getMatriculaCurso() != null && rb.getMatriculaCurso().getCurso() != null ? rb.getMatriculaCurso().getCurso().getNombre() : "S/C",
@@ -195,7 +194,8 @@ public class DialogDetalleAlumno extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnExportarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportarActionPerformed
-        javax.swing.JOptionPane.showMessageDialog(this, "Exportación del Kardex Académico a PDF generada con éxito.", "SAD Calificaciones", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        javax.swing.JOptionPane.showMessageDialog(this, "La exportación a PDF aún no está implementada.", "SAD Calificaciones", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+
     }//GEN-LAST:event_btnExportarActionPerformed
 
     private void btnCerrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarActionPerformed

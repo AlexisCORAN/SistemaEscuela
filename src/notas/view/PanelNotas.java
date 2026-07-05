@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
 import notas.controller.RegistroBimestralController;
+import notas.model.Evaluacion;
 import notas.model.RegistroBimestral;
 import plan_estudios.dao.CursoDAOImpl;
 import plan_estudios.dao.GradoDAOImpl;
@@ -59,29 +60,34 @@ public class PanelNotas extends javax.swing.JPanel {
                 }
             }
         });
-
+ 
         if (this.notasController != null) {
             cargarFiltrosGrado();
         }
     }
+ 
 
     private void cargarFiltrosGrado() {
         cboGrados.removeAllItems();
         cboGrados.addItem("-- Seleccione Grado --");
+        cboGrado.removeAllItems();
+        cboGrado.addItem("-- Seleccione Grado --");
         this.gradosCargados.clear();
         try {
-            List<Grado> todos = new GradoDAOImpl(conn).listarTodos();
-            for (Grado g : todos) {
-                if (g.isActivo()) {
-                    this.gradosCargados.add(g);
-                    cboGrados.addItem(g.getNombre() + " - " + g.getNivel());
-                }
+            plan_estudios.controller.GradoController gradoController = new plan_estudios.controller.GradoController();
+            List<Grado> activos = gradoController.obtenerGradosActivos();
+            for (Grado g : activos) {
+                this.gradosCargados.add(g);
+                final String etiqueta = g.getNombre() + " - " + g.getNivel();
+                cboGrados.addItem(etiqueta);
+                cboGrado.addItem(etiqueta);
             }
         } catch (Exception e) {
             System.err.println("Error carga grados: " + e.getMessage());
         }
     }
-
+ 
+   
     private void cargarCursosPorGrado(int idGrado) {
         cboCurso.removeAllItems();
         cboCurso.addItem("-- Seleccione Curso --");
@@ -89,11 +95,12 @@ public class PanelNotas extends javax.swing.JPanel {
         cboCurso.setEnabled(true);
         btnCargarAlumnos.setEnabled(true);
         cboBimestre.setEnabled(true);
-
+ 
         try {
-            List<Curso> todos = new CursoDAOImpl().listarTodos(); 
+            plan_estudios.controller.CursoController cursoController = new plan_estudios.controller.CursoController();
+            List<Curso> todos = cursoController.obtenerCursos();
             for (Curso c : todos) {
-                if (c.getIdGrado() == idGrado) { 
+                if (c.getGradoAsignado() != null && c.getGradoAsignado().getId() == idGrado) {
                     this.cursosCargados.add(c);
                     cboCurso.addItem(c.getNombre());
                 }
@@ -109,15 +116,15 @@ public class PanelNotas extends javax.swing.JPanel {
         panelReporteRiesgo.setBackground(java.awt.Color.WHITE);
         jTabbedPane1.setBackground(java.awt.Color.WHITE);
         jTabbedPane1.setOpaque(true);
-
+ 
         java.awt.Color colorBorde = new java.awt.Color(220, 220, 220);
         javax.swing.border.Border bordeSimple = javax.swing.BorderFactory.createLineBorder(colorBorde, 1);
-
+ 
         cboGrados.setBackground(java.awt.Color.WHITE);
         cboGrados.setBorder(bordeSimple);
         cboCurso.setBackground(java.awt.Color.WHITE);
         cboCurso.setBorder(bordeSimple);
-
+ 
         jScrollPane1.getViewport().setBackground(java.awt.Color.WHITE);
         jScrollPane1.setBackground(java.awt.Color.WHITE);
         jScrollPane1.setBorder(javax.swing.BorderFactory.createEmptyBorder());
@@ -128,13 +135,13 @@ public class PanelNotas extends javax.swing.JPanel {
         tablaNotas.setShowGrid(false);
         tablaNotas.setShowHorizontalLines(true);
         tablaNotas.setGridColor(new java.awt.Color(230, 230, 230));
-
+ 
         javax.swing.table.JTableHeader header1 = tablaNotas.getTableHeader();
         header1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
         header1.setBackground(new java.awt.Color(245, 245, 245));
         header1.setOpaque(true);
         header1.setReorderingAllowed(false);
-
+ 
         jScrollPane2.getViewport().setBackground(java.awt.Color.WHITE);
         jScrollPane2.setBackground(java.awt.Color.WHITE);
         jScrollPane2.setBorder(javax.swing.BorderFactory.createEmptyBorder());
@@ -145,7 +152,7 @@ public class PanelNotas extends javax.swing.JPanel {
         tablaNotasRiesgo.setShowGrid(false);
         tablaNotasRiesgo.setShowHorizontalLines(true);
         tablaNotasRiesgo.setGridColor(new java.awt.Color(230, 230, 230));
-
+ 
         javax.swing.table.JTableHeader header2 = tablaNotasRiesgo.getTableHeader();
         header2.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
         header2.setBackground(new java.awt.Color(245, 245, 245));
@@ -537,43 +544,57 @@ public class PanelNotas extends javax.swing.JPanel {
 
     private void btnCargarAlumnosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCargarAlumnosActionPerformed
      if (notasController == null) return;
-
+ 
         int idxG = cboGrados.getSelectedIndex();
         int idxC = cboCurso.getSelectedIndex();
         int idxB = cboBimestre.getSelectedIndex();
-
+ 
         if (idxG <= 0 || idxC <= 0 || idxB <= 0) {
-            mostrarMensaje("Seleccione Grado, Curso y Bimestre.", "Filtros", 0);
+            mostrarMensaje("Seleccione Grado, Curso y Bimestre.", "Filtros", javax.swing.JOptionPane.WARNING_MESSAGE);
             return;
         }
-
+ 
         Integer idGrado = gradosCargados.get(idxG - 1).getId();
         Integer idCurso = cursosCargados.get(idxC - 1).getId();
-
-        System.out.println("DEBUG: Enviando -> Grado: " + idGrado + ", Curso: " + idCurso + ", Bimestre: " + idxB);
-        
+ 
         notasController.procesarCargaAlumnos(this, idGrado, idCurso, idxB);
     }//GEN-LAST:event_btnCargarAlumnosActionPerformed
     
     private void btnGuardarNotasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarNotasActionPerformed
         if (notasController == null) return;
-
+ 
         DefaultTableModel modelo = (DefaultTableModel) tablaNotas.getModel();
         if (modelo.getRowCount() == 0) return;
-
+ 
         List<RegistroBimestral> modificados = new ArrayList<>();
         try {
             for (int i = 0; i < modelo.getRowCount(); i++) {
                 RegistroBimestral rb = new RegistroBimestral();
-                
+ 
                 rb.setId(idsRegistrosCargados.get(i));
                 rb.setActivo(true);
-
-                rb.actualizarNotaPorTipo(shared.TipoEvaluacion.PRACTICA, Double.parseDouble(modelo.getValueAt(i, 2).toString()));
-                rb.actualizarNotaPorTipo(shared.TipoEvaluacion.TAREA, Double.parseDouble(modelo.getValueAt(i, 3).toString()));
-                rb.actualizarNotaPorTipo(shared.TipoEvaluacion.PARCIAL, Double.parseDouble(modelo.getValueAt(i, 4).toString()));
-                rb.actualizarNotaPorTipo(shared.TipoEvaluacion.BIMESTRAL, Double.parseDouble(modelo.getValueAt(i, 5).toString()));
-
+ 
+                // FIX: antes los pesos (0.2/0.2/0.3/0.3) estaban hardcodeados
+                // aquí, duplicando la misma regla de negocio que ya vive en
+                // RegistroBimestralController.obtenerPesoPorTipo(). Estos
+                // objetos Evaluacion son transitorios (solo se usan para
+                // llevar tipo+nota al controller; el peso real que se
+                // persiste sale del controller), pero mantenerlos coherentes
+                // con la única fuente de verdad evita divergencias futuras
+                // si el esquema de ponderación cambia.
+                rb.getEvaluaciones().add(new Evaluacion(null, null, "PRACTICA",
+                        shared.TipoEvaluacion.PRACTICA, Double.parseDouble(modelo.getValueAt(i, 2).toString()),
+                        notasController.obtenerPesoPorTipo(shared.TipoEvaluacion.PRACTICA)));
+                rb.getEvaluaciones().add(new Evaluacion(null, null, "TAREA",
+                        shared.TipoEvaluacion.TAREA, Double.parseDouble(modelo.getValueAt(i, 3).toString()),
+                        notasController.obtenerPesoPorTipo(shared.TipoEvaluacion.TAREA)));
+                rb.getEvaluaciones().add(new Evaluacion(null, null, "PARCIAL",
+                        shared.TipoEvaluacion.PARCIAL, Double.parseDouble(modelo.getValueAt(i, 4).toString()),
+                        notasController.obtenerPesoPorTipo(shared.TipoEvaluacion.PARCIAL)));
+                rb.getEvaluaciones().add(new Evaluacion(null, null, "BIMESTRAL",
+                        shared.TipoEvaluacion.BIMESTRAL, Double.parseDouble(modelo.getValueAt(i, 5).toString()),
+                        notasController.obtenerPesoPorTipo(shared.TipoEvaluacion.BIMESTRAL)));
+ 
                 modificados.add(rb);
             }
             notasController.procesarActualizacionMasivaNotas(modificados, this);
@@ -585,15 +606,15 @@ public class PanelNotas extends javax.swing.JPanel {
 
     private void btnGenerarReporteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerarReporteActionPerformed
         if (notasController == null) return;
-
+ 
         int indexGrado = cboGrado.getSelectedIndex();
         int indexBimestre = cboBimestre1.getSelectedIndex();
-
+ 
         if (indexGrado <= 0 || indexBimestre <= 0) {
             mostrarMensaje("Seleccione Grado y Bimestre para el reporte analítico.", "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
             return;
         }
-
+ 
         Integer idGradoReal = gradosCargados.get(indexGrado - 1).getId();
         notasController.procesarGeneracionReporte(this, idGradoReal, indexBimestre);
     }//GEN-LAST:event_btnGenerarReporteActionPerformed
@@ -601,15 +622,15 @@ public class PanelNotas extends javax.swing.JPanel {
     public javax.swing.JTable getTablaNotas() { 
         return tablaNotas; 
     }
-
+ 
     public javax.swing.JTable getTablaNotasRiesgo() { 
         return tablaNotasRiesgo;
     }
-
+ 
     public List<Integer> getIdsRegistrosCargados() { 
         return idsRegistrosCargados; 
     }
-
+ 
     public void mostrarMensaje(String msg, String tit, int tipo) { 
         javax.swing.JOptionPane.showMessageDialog(this, msg, tit, tipo); 
     }

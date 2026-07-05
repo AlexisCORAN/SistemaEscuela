@@ -15,20 +15,7 @@ import plan_estudios.model.Curso;
 import plan_estudios.model.Grado;
 import shared.RowMappers;
 import shared.IRowMapper;
-
-/**
- * Matricula es la raíz de un agregado (Aggregate Root) que incluye su
- * detalle de MatriculaCurso: por eso todo el acceso a ambas tablas se
- * concentra aquí, en vez de tener un DAO independiente para el detalle.
- * MatriculaCurso no tiene reglas de negocio propias ni sentido fuera de
- * una Matricula, así que no justifica su propia capa de persistencia.
- *
- * IMPORTANTE sobre atomicidad: que ambas tablas se toquen desde la misma
- * clase NO es lo que garantiza la transacción. Lo que la garantiza es que
- * el Controller (MatriculaController.registrarMatricula) abra una única
- * Connection, apague el auto-commit, y haga commit()/rollback() según el
- * resultado de este DAO. Este DAO nunca hace commit/rollback por su cuenta.
- *
+/*
  * @author Alexis
  */
 
