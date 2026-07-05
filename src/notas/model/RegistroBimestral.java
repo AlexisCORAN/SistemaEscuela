@@ -117,10 +117,18 @@ public class RegistroBimestral {
     public double calcularPromedio() {
         double total = 0.0;
         for (Evaluacion e : evaluaciones) {
-            if (e.getNota() != null && e.getPeso() != null) {
-                total += e.getNota() * e.getPeso();
+            if (e.getNota() != null && e.getTipo() != null) {
+                total += e.getNota() * e.getTipo().getPeso();
             }
         }
+        return Math.round(total * 100.0) / 100.0;
+    }
+
+    public static double calcularPromedioEstatico(double practica, double tarea, double parcial, double bimestral) {
+        double total = (practica * TipoEvaluacion.PRACTICA.getPeso()) + 
+                       (tarea * TipoEvaluacion.TAREA.getPeso()) + 
+                       (parcial * TipoEvaluacion.PARCIAL.getPeso()) + 
+                       (bimestral * TipoEvaluacion.BIMESTRAL.getPeso());
         return Math.round(total * 100.0) / 100.0;
     }
 }

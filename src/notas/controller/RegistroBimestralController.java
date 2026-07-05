@@ -9,14 +9,12 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.swing.table.DefaultTableModel;
 import notas.dao.EvaluacionDAOImpl;
 import notas.dao.IEvaluacionDAO;
 import notas.dao.IRegistroBimestralDAO;
 import notas.dao.RegistroBimestralDAOImpl;
 import notas.model.Evaluacion;
 import notas.model.RegistroBimestral;
-import notas.view.PanelNotas;
 import shared.TipoEvaluacion;
 
 /**
@@ -108,7 +106,6 @@ public class RegistroBimestralController {
         }
     }
 
-
     public List<RegistroBimestral> cargarNotasCompletasPorMateria(final Integer idMatriculaCurso, final int bimestre) {
         if (idMatriculaCurso == null) return Collections.emptyList();
 
@@ -165,128 +162,157 @@ public class RegistroBimestralController {
         }
     }
 
-    public void procesarCargaAlumnos(final PanelNotas vista, final Integer idGrado, final Integer idCurso, final int bimestre) {
+   
+    public List<Object[]> obtenerNotasParaGrilla(final Integer idGrado, final Integer idCurso, final int bimestre) throws Exception {
         if (idGrado == null || idCurso == null || bimestre < 1) {
-            vista.mostrarMensaje("Datos de filtro inválidos.", "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
-            return;
+            throw new IllegalArgumentException("Datos de filtro inválidos para la carga de alumnos.");
         }
 
-        final DefaultTableModel modelo = (DefaultTableModel) vista.getTablaNotas().getModel();
-        modelo.setRowCount(0);
-        vista.getIdsRegistrosCargados().clear();
+        final Connection conn = ConexionDB.getInstance().getConexion();
+        final IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
+        final List<Object[]> filasBD = registroDAO.listarNotasParaTabla(idGrado, idCurso, bimestre);
 
-        try {
-            final Connection conn = ConexionDB.getInstance().getConexion();
-            final IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
-            final List<Object[]> filas = registroDAO.listarNotasParaTabla(idGrado, idCurso, bimestre);
+        final List<Object[]> filasProcesadas = new ArrayList<>();
+        for (final Object[] fila : filasBD) {
+            final double practica = (double) fila[3];
+            final double tarea = (double) fila[4];
+            final double parcial = (double) fila[5];
+            final double bimestral = (double) fila[6];
+            
+            final double promedio = RegistroBimestral.calcularPromedioEstatico(practica, tarea, parcial, bimestral);
 
-            for (final Object[] fila : filas) {
-                final int idRegistro = (int) fila[0];
-                final String codigoMatricula = (String) fila[1];
-                final String alumnoNombre = (String) fila[2];
-                final double practica = (double) fila[3];
-                final double tarea = (double) fila[4];
-                final double parcial = (double) fila[5];
-                final double bimestral = (double) fila[6];
-                final double promedio = calcularPromedioPonderado(practica, tarea, parcial, bimestral);
-
-                modelo.addRow(new Object[]{codigoMatricula, alumnoNombre, practica, tarea, parcial, bimestral, promedio});
-                vista.getIdsRegistrosCargados().add(idRegistro);
-            }
-        } catch (final Exception e) {
-            System.err.println("Error al cargar alumnos para la grilla de notas: " + e.getMessage());
-            vista.mostrarMensaje("Error al cargar la grilla de notas: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            filasProcesadas.add(new Object[]{
+                fila[0], 
+                fila[1], 
+                fila[2],
+                practica, tarea, parcial, bimestral, promedio
+            });
         }
+        return filasProcesadas;
     }
 
-    public void procesarGeneracionReporte(final PanelNotas vista, final Integer idGrado, final int bimestre) {
+    public List<Object[]> obtenerReporteRiesgo(final Integer idGrado, final int bimestre) throws Exception {
         if (idGrado == null || bimestre < 1) {
-            vista.mostrarMensaje("Seleccione los parámetros de reporte obligatorios.", "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
-            return;
+            throw new IllegalArgumentException("Seleccione los parámetros de reporte obligatorios.");
         }
 
-        try {
-            final DefaultTableModel modeloRiesgo = (DefaultTableModel) vista.getTablaNotasRiesgo().getModel();
-            modeloRiesgo.setRowCount(0);
+        final Connection conn = ConexionDB.getInstance().getConexion();
+        final IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
+        final List<Object[]> riesgoBD = registroDAO.listarAlumnosEnRiesgo(idGrado, bimestre);
 
-            final Connection conn = ConexionDB.getInstance().getConexion();
-            final IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
-            final List<Object[]> riesgo = registroDAO.listarAlumnosEnRiesgo(idGrado, bimestre);
-
-            for (final Object[] fila : riesgo) {
-                modeloRiesgo.addRow(new Object[]{
-                    fila[0], fila[1], fila[2],
-                    Math.round((double) fila[3] * 100.0) / 100.0,
-                    "REQUIERE REFUERZO"
-                });
-            }
-            vista.mostrarMensaje("Reporte completado. Se hallaron " + riesgo.size() + " alertas académicas.", "SAD Reportes", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-        } catch (final Exception e) {
-            vista.mostrarMensaje("Error al generar el reporte analítico: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        final List<Object[]> filasReporte = new ArrayList<>();
+        for (final Object[] fila : riesgoBD) {
+            filasReporte.add(new Object[]{
+                fila[0], fila[1], fila[2],
+                Math.round((double) fila[3] * 100.0) / 100.0,
+                "REQUIERE REFUERZO"
+            });
         }
+        return filasReporte;
     }
 
-    public boolean procesarActualizacionMasivaNotas(final List<RegistroBimestral> modificados, final PanelNotas vista) {
-        if (modificados == null || modificados.isEmpty()) return false;
+    public List<Evaluacion> obtenerEvaluacionesPorRegistro(final Integer idRegistroBimestral) throws Exception {
+        if (idRegistroBimestral == null) return Collections.emptyList();
+        
+        final Connection conn = ConexionDB.getInstance().getConexion();
+        final IEvaluacionDAO evaluacionDAO = new EvaluacionDAOImpl(conn);
+        return evaluacionDAO.listarPorRegistroBimestral(idRegistroBimestral);
+    }
+    
+    public void procesarActualizacionMasivaNotas(final List<RegistroBimestral> modificados) throws Exception {
+        if (modificados == null || modificados.isEmpty()) {
+            throw new IllegalArgumentException("No hay datos para guardar.");
+        }
 
         Connection conn = null;
         try {
             conn = ConexionDB.getInstance().getConexion();
-            conn.setAutoCommit(false);
+            conn.setAutoCommit(false); // Inicia transacción
 
             final IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
             final IEvaluacionDAO evaluacionDAO = new EvaluacionDAOImpl(conn);
 
             for (final RegistroBimestral cambios : modificados) {
                 final RegistroBimestral registroReal = registroDAO.obtenerPorId(cambios.getId());
-                if (registroReal == null) continue;
+                
+                if (registroReal != null && registroReal.isActivo()) {
+                    final List<Evaluacion> evaluacionesActuales = evaluacionDAO.listarPorRegistroBimestral(registroReal.getId());
+                    registroReal.setEvaluaciones(evaluacionesActuales);
 
-                if (!registroReal.isActivo()) {
-                    continue;
-                }
+                    for (final Evaluacion cambio : cambios.getEvaluaciones()) {
+                        final Evaluacion existente = buscarPorTipo(evaluacionesActuales, cambio.getTipo());
+                        if (existente != null) {
+                            existente.setNota(cambio.getNota());
+                            evaluacionDAO.actualizar(existente);
+                        } else {
+                            final Evaluacion nueva = new Evaluacion(null, registroReal, cambio.getTipo().name(),
+                                    cambio.getTipo(), cambio.getNota(), cambio.getTipo().getPeso());
+                            evaluacionDAO.insertarConCabecera(nueva, registroReal.getId());
+                        }
+                    }
 
-                final List<Evaluacion> evaluacionesActuales = evaluacionDAO.listarPorRegistroBimestral(registroReal.getId());
-                registroReal.setEvaluaciones(evaluacionesActuales);
-
-                for (final Evaluacion cambio : cambios.getEvaluaciones()) {
-                    final Evaluacion existente = buscarPorTipo(evaluacionesActuales, cambio.getTipo());
-                    if (existente != null) {
-                        existente.setNota(cambio.getNota());
-                        evaluacionDAO.actualizar(existente);
-                    } else {
-                        final Evaluacion nueva = new Evaluacion(null, registroReal, cambio.getTipo().name(),
-                                cambio.getTipo(), cambio.getNota(), obtenerPesoPorTipo(cambio.getTipo()));
-                        evaluacionDAO.insertarConCabecera(nueva, registroReal.getId());
+                    registroReal.setEvaluaciones(evaluacionDAO.listarPorRegistroBimestral(registroReal.getId()));
+                    final double promedio = registroReal.calcularPromedio();
+                    if (registroReal.getMatriculaCurso() != null) {
+                        registroDAO.actualizarNotaFinalMatriculaCurso(registroReal.getMatriculaCurso().getId(), promedio);
                     }
                 }
+            }
 
-              
-                registroReal.setEvaluaciones(evaluacionDAO.listarPorRegistroBimestral(registroReal.getId()));
-                final double promedio = registroReal.calcularPromedio();
-                if (registroReal.getMatriculaCurso() != null) {
-                    registroDAO.actualizarNotaFinalMatriculaCurso(registroReal.getMatriculaCurso().getId(), promedio);
+            conn.commit(); 
+        } catch (final Exception e) {
+            if (conn != null) conn.rollback(); 
+            throw new Exception("Error transaccional al guardar notas masivas: " + e.getMessage());
+        } finally {
+            if (conn != null) conn.setAutoCommit(true);
+        }
+    }
+
+    public void guardarEvaluacionesDetalle(final Integer idRegistro, final List<Evaluacion> evaluacionesModificadas) throws Exception {
+        if (idRegistro == null || evaluacionesModificadas == null || evaluacionesModificadas.isEmpty()) {
+            throw new IllegalArgumentException("Datos insuficientes para guardar.");
+        }
+
+        Connection conn = null;
+        try {
+            conn = ConexionDB.getInstance().getConexion();
+            conn.setAutoCommit(false); 
+
+            final IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
+            final IEvaluacionDAO evaluacionDAO = new EvaluacionDAOImpl(conn);
+
+            final RegistroBimestral registroReal = registroDAO.obtenerPorId(idRegistro);
+            if (registroReal == null || !registroReal.isActivo()) {
+                throw new IllegalStateException("El registro está cerrado o no existe.");
+            }
+
+            final List<Evaluacion> evaluacionesActuales = evaluacionDAO.listarPorRegistroBimestral(idRegistro);
+            
+            for (final Evaluacion modificada : evaluacionesModificadas) {
+                final Evaluacion existente = buscarPorTipo(evaluacionesActuales, modificada.getTipo());
+                if (existente != null) {
+                    existente.setNota(modificada.getNota());
+                    evaluacionDAO.actualizar(existente);
+                } else {
+                    final Evaluacion nueva = new Evaluacion(null, registroReal, modificada.getTipo().name(),
+                            modificada.getTipo(), modificada.getNota(), modificada.getTipo().getPeso()); // Extrae el peso del Enum
+                    evaluacionDAO.insertarConCabecera(nueva, idRegistro);
                 }
             }
 
-            conn.commit();
-            vista.mostrarMensaje("¡Calificaciones guardadas y promedios actualizados con éxito!", "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            return true;
+            registroReal.setEvaluaciones(evaluacionDAO.listarPorRegistroBimestral(idRegistro));
+            final double nuevoPromedio = registroReal.calcularPromedio(); // Llama al método del Dominio
+            
+            if (registroReal.getMatriculaCurso() != null) {
+                registroDAO.actualizarNotaFinalMatriculaCurso(registroReal.getMatriculaCurso().getId(), nuevoPromedio);
+            }
 
+            conn.commit(); 
         } catch (final Exception e) {
-            System.err.println("Error transaccional al guardar notas: " + e.getMessage());
-            try {
-                if (conn != null) conn.rollback();
-            } catch (final Exception ex) {
-                System.err.println("Error ejecutando el rollback: " + ex.getMessage());
-            }
-            vista.mostrarMensaje("Error al guardar las calificaciones: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-            return false;
+            if (conn != null) conn.rollback(); 
+            throw new Exception("Error transaccional al guardar las notas: " + e.getMessage());
         } finally {
-            try {
-                if (conn != null) conn.setAutoCommit(true);
-            } catch (final Exception ex) {
-                System.err.println("Error restaurando autocommit: " + ex.getMessage());
-            }
+            if (conn != null) conn.setAutoCommit(true);
         }
     }
 
@@ -295,20 +321,5 @@ public class RegistroBimestralController {
             if (e.getTipo() == tipo) return e;
         }
         return null;
-    }
-
-    
-    public double obtenerPesoPorTipo(final TipoEvaluacion tipo) {
-        switch (tipo) {
-            case PRACTICA: return 0.2;
-            case TAREA: return 0.2;
-            case PARCIAL: return 0.3;
-            case BIMESTRAL: return 0.3;
-            default: return 0.25;
-        }
-    }
-
-    private double calcularPromedioPonderado(final double practica, final double tarea, final double parcial, final double bimestral) {
-        return Math.round((practica * 0.2 + tarea * 0.2 + parcial * 0.3 + bimestral * 0.3) * 100.0) / 100.0;
     }
 }

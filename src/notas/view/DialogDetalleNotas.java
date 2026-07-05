@@ -1,24 +1,30 @@
-package notas.view;
-
-import java.util.List;
-import javax.swing.table.DefaultTableModel;
-import main.VentanaPrincipal;
-import notas.model.Evaluacion;
-import notas.model.RegistroBimestral;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JDialog.java to edit this template
  */
+package notas.view;
+
+import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import main.VentanaPrincipal;
+import notas.controller.RegistroBimestralController;
+import notas.model.Evaluacion;
 
 /**
  *
  * @author Alexis
  */
-public class DialogDetalleAlumno extends javax.swing.JDialog {
+public class DialogDetalleNotas extends javax.swing.JDialog {
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(DialogDetalleAlumno.class.getName());
-
+    private static final Logger logger = Logger.getLogger(DialogDetalleNotas.class.getName());
+    private final RegistroBimestralController controller;
+    private final Integer idRegistroBimestralActual;
+    private List<Evaluacion> evaluacionesActuales;
+    
     /**
      * Creates new form DialogDetalleAlumno
      * @param parent
@@ -26,51 +32,34 @@ public class DialogDetalleAlumno extends javax.swing.JDialog {
      * @param nombreAlumno
      * @param gradoAlumno
      */
-    public DialogDetalleAlumno(java.awt.Frame parent, boolean modal, String nombreAlumno, String gradoAlumno, List<RegistroBimestral> historial) {
+    public DialogDetalleNotas(java.awt.Frame parent, boolean modal, RegistroBimestralController controller, 
+                              Integer idRegistro, String nombreAlumno, String curso, String bimestre) {
         super(parent, modal);
         initComponents();
         this.setLocationRelativeTo(parent);
-        lblNombreAlumno.setText("Alumno: " + nombreAlumno);
-        lblGradoAlumno.setText("Grado: " + gradoAlumno);
+        this.controller = controller;
+        this.idRegistroBimestralActual = idRegistro;
         
-        cargarHistorialEnTabla(historial);
+        lblNombrePanel.setText("Detalle de Evaluaciones");
+        lblNombreAlumno.setText("Alumno: " + nombreAlumno);
+        lblGradoAlumno.setText("Curso: " + curso + " | " + bimestre);
+        
+        cargarEvaluaciones();
     }
     
-    private void cargarHistorialEnTabla(List<RegistroBimestral> historial) {
+    private void cargarEvaluaciones() {
+        if (controller == null || idRegistroBimestralActual == null) return;
+        
         DefaultTableModel modelo = (DefaultTableModel) panelDatosAlumnoRiesgo.getModel();
         modelo.setRowCount(0);
- 
-        for (RegistroBimestral rb : historial) {
-            double practicas = 0, tareas = 0, parcial = 0, bimestral = 0;
-            
-            for (Evaluacion e : rb.getEvaluaciones()) {
-                if (null != e.getTipo()) switch (e.getTipo()) {
-                    case PRACTICA:
-                        practicas = e.getNota();
-                        break;
-                    case TAREA:
-                        tareas = e.getNota();
-                        break;
-                    case PARCIAL:
-                        parcial = e.getNota();
-                        break;
-                    case BIMESTRAL:
-                        bimestral = e.getNota();
-                        break;
-                    default:
-                        break;
-                }
-}
- 
-            modelo.addRow(new Object[]{
-                "Bimestre " + rb.getBimestre(),
-                rb.getMatriculaCurso() != null && rb.getMatriculaCurso().getCurso() != null ? rb.getMatriculaCurso().getCurso().getNombre() : "S/C",
-                practicas,
-                tareas,
-                parcial,
-                bimestral,
-                rb.calcularPromedio()
-            });
+        
+        try {
+            evaluacionesActuales = controller.obtenerEvaluacionesPorRegistro(idRegistroBimestralActual);
+            for (Evaluacion e : evaluacionesActuales) {
+                modelo.addRow(new Object[]{ e.getTipo(), e.getNombre(), e.getNota(), e.getPeso() });
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al cargar: " + ex.getMessage());
         }
     }
 
@@ -95,12 +84,13 @@ public class DialogDetalleAlumno extends javax.swing.JDialog {
         panelBotones = new javax.swing.JPanel();
         btnCerrar = new javax.swing.JButton();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0));
-        btnExportar = new javax.swing.JButton();
+        btnGuardarNotas = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(850, 600));
         setModal(true);
 
+        panelPrincipal.setOpaque(false);
         panelPrincipal.setLayout(new java.awt.BorderLayout());
 
         panelSuperior.setBorder(javax.swing.BorderFactory.createEmptyBorder(15, 15, 15, 15));
@@ -124,33 +114,32 @@ public class DialogDetalleAlumno extends javax.swing.JDialog {
 
         panelDatosAlumnoRiesgo.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null}
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
             },
             new String [] {
-                "Bimestre", "Curso", "Promedio Prácticas", "Promedio Tareas", "Ex. Parcial", "Ex. Bimestral", "Promedio"
+                "Tipo", "Nombre de evaluación", "Nota", "Peso"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, true, true, true, true, true
+                false, false, true, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
+        panelDatosAlumnoRiesgo.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(panelDatosAlumnoRiesgo);
         if (panelDatosAlumnoRiesgo.getColumnModel().getColumnCount() > 0) {
             panelDatosAlumnoRiesgo.getColumnModel().getColumn(0).setResizable(false);
             panelDatosAlumnoRiesgo.getColumnModel().getColumn(1).setResizable(false);
             panelDatosAlumnoRiesgo.getColumnModel().getColumn(2).setResizable(false);
             panelDatosAlumnoRiesgo.getColumnModel().getColumn(3).setResizable(false);
-            panelDatosAlumnoRiesgo.getColumnModel().getColumn(4).setResizable(false);
-            panelDatosAlumnoRiesgo.getColumnModel().getColumn(5).setResizable(false);
         }
 
         panelCentral.add(jScrollPane1, java.awt.BorderLayout.CENTER);
@@ -173,16 +162,16 @@ public class DialogDetalleAlumno extends javax.swing.JDialog {
         panelBotones.add(btnCerrar);
         panelBotones.add(filler1);
 
-        btnExportar.setText("Exportar PDF");
-        btnExportar.setMaximumSize(new java.awt.Dimension(120, 35));
-        btnExportar.setMinimumSize(new java.awt.Dimension(120, 35));
-        btnExportar.setPreferredSize(new java.awt.Dimension(120, 35));
-        btnExportar.addActionListener(new java.awt.event.ActionListener() {
+        btnGuardarNotas.setText("Guardar Notas");
+        btnGuardarNotas.setMaximumSize(new java.awt.Dimension(120, 35));
+        btnGuardarNotas.setMinimumSize(new java.awt.Dimension(120, 35));
+        btnGuardarNotas.setPreferredSize(new java.awt.Dimension(120, 35));
+        btnGuardarNotas.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnExportarActionPerformed(evt);
+                btnGuardarNotasActionPerformed(evt);
             }
         });
-        panelBotones.add(btnExportar);
+        panelBotones.add(btnGuardarNotas);
 
         panelInferior.add(panelBotones, java.awt.BorderLayout.EAST);
 
@@ -193,10 +182,28 @@ public class DialogDetalleAlumno extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnExportarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportarActionPerformed
-        javax.swing.JOptionPane.showMessageDialog(this, "La exportación a PDF aún no está implementada.", "SAD Calificaciones", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    private void btnGuardarNotasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarNotasActionPerformed
+        DefaultTableModel modelo = (DefaultTableModel) panelDatosAlumnoRiesgo.getModel();
+        List<Evaluacion> cambios = new ArrayList<>();
 
-    }//GEN-LAST:event_btnExportarActionPerformed
+        try {
+            for (int i = 0; i < modelo.getRowCount(); i++) {
+                double nuevaNota = Double.parseDouble(modelo.getValueAt(i, 2).toString());
+                
+                Evaluacion e = evaluacionesActuales.get(i);
+                e.setNota(nuevaNota); 
+                cambios.add(e);
+            }
+            
+            controller.guardarEvaluacionesDetalle(idRegistroBimestralActual, cambios);
+            
+            JOptionPane.showMessageDialog(this, "Notas guardadas correctamente.");
+            this.dispose();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al guardar: " + ex.getMessage());
+        }
+
+    }//GEN-LAST:event_btnGuardarNotasActionPerformed
 
     private void btnCerrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarActionPerformed
         this.dispose();
@@ -217,7 +224,7 @@ public class DialogDetalleAlumno extends javax.swing.JDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCerrar;
-    private javax.swing.JButton btnExportar;
+    private javax.swing.JButton btnGuardarNotas;
     private javax.swing.Box.Filler filler1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblGradoAlumno;

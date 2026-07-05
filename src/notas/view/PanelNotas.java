@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
+ */
 package notas.view;
 
 import java.util.ArrayList;
@@ -6,15 +10,8 @@ import javax.swing.table.DefaultTableModel;
 import notas.controller.RegistroBimestralController;
 import notas.model.Evaluacion;
 import notas.model.RegistroBimestral;
-import plan_estudios.dao.CursoDAOImpl;
-import plan_estudios.dao.GradoDAOImpl;
 import plan_estudios.model.Curso;
 import plan_estudios.model.Grado;
-
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
- */
 
 /**
  *
@@ -34,38 +31,18 @@ public class PanelNotas extends javax.swing.JPanel {
     public PanelNotas() {
         this.notasController = null;
         initComponents();
-        estilizarComponentes();
-        cboCurso.setEnabled(false);
-        cboBimestre.setEnabled(false);
-        btnCargarAlumnos.setEnabled(false);
+        estilizarCabecerasTablas(); 
     }
     
     public PanelNotas(RegistroBimestralController notasController) {
         this.notasController = notasController;
         initComponents();
-        estilizarComponentes();
-        cboCurso.setEnabled(false);
-        cboBimestre.setEnabled(false);
-        btnCargarAlumnos.setEnabled(false);
+        estilizarCabecerasTablas();
         
-        cboGrados.addItemListener(e -> {
-            if (e.getStateChange() == java.awt.event.ItemEvent.SELECTED) {
-                if (cboGrados.getSelectedIndex() > 0) {
-                    cargarCursosPorGrado(gradosCargados.get(cboGrados.getSelectedIndex() - 1).getId());
-                } else {
-                    cboCurso.removeAllItems();
-                    cboCurso.addItem("-- Seleccione Curso --");
-                    cboCurso.setEnabled(false);
-                    btnCargarAlumnos.setEnabled(false);
-                }
-            }
-        });
- 
         if (this.notasController != null) {
             cargarFiltrosGrado();
         }
     }
- 
 
     private void cargarFiltrosGrado() {
         cboGrados.removeAllItems();
@@ -86,8 +63,7 @@ public class PanelNotas extends javax.swing.JPanel {
             System.err.println("Error carga grados: " + e.getMessage());
         }
     }
- 
-   
+    
     private void cargarCursosPorGrado(int idGrado) {
         cboCurso.removeAllItems();
         cboCurso.addItem("-- Seleccione Curso --");
@@ -95,7 +71,7 @@ public class PanelNotas extends javax.swing.JPanel {
         cboCurso.setEnabled(true);
         btnCargarAlumnos.setEnabled(true);
         cboBimestre.setEnabled(true);
- 
+
         try {
             plan_estudios.controller.CursoController cursoController = new plan_estudios.controller.CursoController();
             List<Curso> todos = cursoController.obtenerCursos();
@@ -110,49 +86,13 @@ public class PanelNotas extends javax.swing.JPanel {
         }
     }
     
-    private void estilizarComponentes() {
-        this.setBackground(java.awt.Color.WHITE);
-        panelRegistroNotas.setBackground(java.awt.Color.WHITE);
-        panelReporteRiesgo.setBackground(java.awt.Color.WHITE);
-        jTabbedPane1.setBackground(java.awt.Color.WHITE);
-        jTabbedPane1.setOpaque(true);
- 
-        java.awt.Color colorBorde = new java.awt.Color(220, 220, 220);
-        javax.swing.border.Border bordeSimple = javax.swing.BorderFactory.createLineBorder(colorBorde, 1);
- 
-        cboGrados.setBackground(java.awt.Color.WHITE);
-        cboGrados.setBorder(bordeSimple);
-        cboCurso.setBackground(java.awt.Color.WHITE);
-        cboCurso.setBorder(bordeSimple);
- 
-        jScrollPane1.getViewport().setBackground(java.awt.Color.WHITE);
-        jScrollPane1.setBackground(java.awt.Color.WHITE);
-        jScrollPane1.setBorder(javax.swing.BorderFactory.createEmptyBorder());
-        
-        tablaNotas.setFillsViewportHeight(true); 
-        tablaNotas.setOpaque(false);
-        tablaNotas.setRowHeight(40);
-        tablaNotas.setShowGrid(false);
-        tablaNotas.setShowHorizontalLines(true);
-        tablaNotas.setGridColor(new java.awt.Color(230, 230, 230));
- 
+    private void estilizarCabecerasTablas() {
         javax.swing.table.JTableHeader header1 = tablaNotas.getTableHeader();
         header1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
         header1.setBackground(new java.awt.Color(245, 245, 245));
         header1.setOpaque(true);
         header1.setReorderingAllowed(false);
- 
-        jScrollPane2.getViewport().setBackground(java.awt.Color.WHITE);
-        jScrollPane2.setBackground(java.awt.Color.WHITE);
-        jScrollPane2.setBorder(javax.swing.BorderFactory.createEmptyBorder());
-        
-        tablaNotasRiesgo.setFillsViewportHeight(true);
-        tablaNotasRiesgo.setOpaque(false);
-        tablaNotasRiesgo.setRowHeight(40);
-        tablaNotasRiesgo.setShowGrid(false);
-        tablaNotasRiesgo.setShowHorizontalLines(true);
-        tablaNotasRiesgo.setGridColor(new java.awt.Color(230, 230, 230));
- 
+
         javax.swing.table.JTableHeader header2 = tablaNotasRiesgo.getTableHeader();
         header2.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
         header2.setBackground(new java.awt.Color(245, 245, 245));
@@ -213,7 +153,9 @@ public class PanelNotas extends javax.swing.JPanel {
         tablaNotasRiesgo = new javax.swing.JTable();
         panelInferior = new javax.swing.JPanel();
 
+        setBackground(new java.awt.Color(255, 255, 255));
         setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setOpaque(false);
         setLayout(new java.awt.BorderLayout());
 
         panelPrincipal.setOpaque(false);
@@ -238,6 +180,7 @@ public class PanelNotas extends javax.swing.JPanel {
 
         panelPrincipal.add(panelSuperior, java.awt.BorderLayout.NORTH);
 
+        panelCentral.setOpaque(false);
         panelCentral.setLayout(new java.awt.BorderLayout());
 
         jTabbedPane1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
@@ -245,8 +188,10 @@ public class PanelNotas extends javax.swing.JPanel {
         panelRegistroNotas.setBackground(new java.awt.Color(255, 255, 255));
         panelRegistroNotas.setLayout(new java.awt.BorderLayout());
 
+        panelCabecera.setOpaque(false);
         panelCabecera.setLayout(new javax.swing.BoxLayout(panelCabecera, javax.swing.BoxLayout.LINE_AXIS));
 
+        panelGrado.setOpaque(false);
         panelGrado.setLayout(new javax.swing.BoxLayout(panelGrado, javax.swing.BoxLayout.LINE_AXIS));
 
         lblGrado.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -258,9 +203,15 @@ public class PanelNotas extends javax.swing.JPanel {
         panelGrado.add(filler1);
 
         cboGrados.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cboGrados.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(220, 220, 220), 1, true));
         cboGrados.setMaximumSize(new java.awt.Dimension(70, 35));
         cboGrados.setMinimumSize(new java.awt.Dimension(70, 35));
         cboGrados.setPreferredSize(new java.awt.Dimension(70, 35));
+        cboGrados.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cboGradosItemStateChanged(evt);
+            }
+        });
         cboGrados.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboGradosActionPerformed(evt);
@@ -270,6 +221,7 @@ public class PanelNotas extends javax.swing.JPanel {
 
         panelCabecera.add(panelGrado);
 
+        panelCurso.setOpaque(false);
         panelCurso.setLayout(new javax.swing.BoxLayout(panelCurso, javax.swing.BoxLayout.LINE_AXIS));
 
         lblCurso.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -281,9 +233,16 @@ public class PanelNotas extends javax.swing.JPanel {
         panelCurso.add(filler3);
 
         cboCurso.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cboCurso.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(220, 220, 220), 1, true));
+        cboCurso.setEnabled(false);
         cboCurso.setMaximumSize(new java.awt.Dimension(70, 35));
         cboCurso.setMinimumSize(new java.awt.Dimension(70, 35));
         cboCurso.setPreferredSize(new java.awt.Dimension(70, 35));
+        cboCurso.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cboCursoItemStateChanged(evt);
+            }
+        });
         cboCurso.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboCursoActionPerformed(evt);
@@ -293,6 +252,7 @@ public class PanelNotas extends javax.swing.JPanel {
 
         panelCabecera.add(panelCurso);
 
+        panelBimestre.setOpaque(false);
         panelBimestre.setLayout(new javax.swing.BoxLayout(panelBimestre, javax.swing.BoxLayout.LINE_AXIS));
 
         lblBimestre.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -303,10 +263,17 @@ public class PanelNotas extends javax.swing.JPanel {
         panelBimestre.add(lblBimestre);
         panelBimestre.add(filler6);
 
-        cboBimestre.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cboBimestre.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "-- Seleccione Bimestre --", "Bimestre 1", "Bimestre 2", "Bimestre 3", "Bimestre 4" }));
+        cboBimestre.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(220, 220, 220), 1, true));
+        cboBimestre.setEnabled(false);
         cboBimestre.setMaximumSize(new java.awt.Dimension(70, 35));
         cboBimestre.setMinimumSize(new java.awt.Dimension(70, 35));
         cboBimestre.setPreferredSize(new java.awt.Dimension(70, 35));
+        cboBimestre.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cboBimestreItemStateChanged(evt);
+            }
+        });
         cboBimestre.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboBimestreActionPerformed(evt);
@@ -343,6 +310,8 @@ public class PanelNotas extends javax.swing.JPanel {
         panelRegistroNotas.add(panelCabecera, java.awt.BorderLayout.NORTH);
 
         jScrollPane1.setBackground(new java.awt.Color(255, 255, 255));
+        jScrollPane1.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        jScrollPane1.setOpaque(false);
 
         tablaNotas.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -364,15 +333,25 @@ public class PanelNotas extends javax.swing.JPanel {
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, true, true, true, true, true
+                false, false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
+        tablaNotas.setFillsViewportHeight(true);
+        tablaNotas.setGridColor(new java.awt.Color(230, 230, 230));
+        tablaNotas.setOpaque(false);
         tablaNotas.setRowHeight(35);
-        tablaNotas.setShowGrid(true);
+        tablaNotas.setShowGrid(false);
+        tablaNotas.setShowVerticalLines(false);
+        tablaNotas.getTableHeader().setReorderingAllowed(false);
+        tablaNotas.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tablaNotasMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(tablaNotas);
         if (tablaNotas.getColumnModel().getColumnCount() > 0) {
             tablaNotas.getColumnModel().getColumn(0).setResizable(false);
@@ -389,10 +368,13 @@ public class PanelNotas extends javax.swing.JPanel {
         jTabbedPane1.addTab("   Registro de Notas   ", panelRegistroNotas);
 
         panelReporteRiesgo.setBackground(new java.awt.Color(255, 255, 255));
+        panelReporteRiesgo.setOpaque(false);
         panelReporteRiesgo.setLayout(new java.awt.BorderLayout());
 
+        panelCabecera1.setOpaque(false);
         panelCabecera1.setLayout(new javax.swing.BoxLayout(panelCabecera1, javax.swing.BoxLayout.LINE_AXIS));
 
+        jPanel9.setOpaque(false);
         jPanel9.setLayout(new javax.swing.BoxLayout(jPanel9, javax.swing.BoxLayout.LINE_AXIS));
 
         lblGrado1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -407,6 +389,11 @@ public class PanelNotas extends javax.swing.JPanel {
         cboGrado.setMaximumSize(new java.awt.Dimension(70, 35));
         cboGrado.setMinimumSize(new java.awt.Dimension(70, 35));
         cboGrado.setPreferredSize(new java.awt.Dimension(70, 35));
+        cboGrado.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cboGradoItemStateChanged(evt);
+            }
+        });
         cboGrado.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboGradoActionPerformed(evt);
@@ -416,6 +403,7 @@ public class PanelNotas extends javax.swing.JPanel {
 
         panelCabecera1.add(jPanel9);
 
+        panelBimestre1.setOpaque(false);
         panelBimestre1.setLayout(new javax.swing.BoxLayout(panelBimestre1, javax.swing.BoxLayout.LINE_AXIS));
 
         lblBimestre1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -426,10 +414,15 @@ public class PanelNotas extends javax.swing.JPanel {
         panelBimestre1.add(lblBimestre1);
         panelBimestre1.add(filler8);
 
-        cboBimestre1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cboBimestre1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "-- Seleccione Bimestre --", "Bimestre 1", "Bimestre 2", "Bimestre 3", "Bimestre 4" }));
         cboBimestre1.setMaximumSize(new java.awt.Dimension(70, 35));
         cboBimestre1.setMinimumSize(new java.awt.Dimension(50, 35));
         cboBimestre1.setPreferredSize(new java.awt.Dimension(70, 35));
+        cboBimestre1.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cboBimestre1ItemStateChanged(evt);
+            }
+        });
         cboBimestre1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboBimestre1ActionPerformed(evt);
@@ -454,9 +447,12 @@ public class PanelNotas extends javax.swing.JPanel {
 
         panelReporteRiesgo.add(panelCabecera1, java.awt.BorderLayout.NORTH);
 
+        panelNotasRiesgo.setOpaque(false);
         panelNotasRiesgo.setLayout(new java.awt.BorderLayout());
 
         jScrollPane2.setBackground(new java.awt.Color(255, 255, 255));
+        jScrollPane2.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        jScrollPane2.setOpaque(false);
 
         tablaNotasRiesgo.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -478,15 +474,19 @@ public class PanelNotas extends javax.swing.JPanel {
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                true, false, false, false, false
+                false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
+        tablaNotasRiesgo.setFillsViewportHeight(true);
+        tablaNotasRiesgo.setGridColor(new java.awt.Color(230, 230, 230));
         tablaNotasRiesgo.setRowHeight(35);
-        tablaNotasRiesgo.setShowGrid(true);
+        tablaNotasRiesgo.setShowGrid(false);
+        tablaNotasRiesgo.setShowVerticalLines(false);
+        tablaNotasRiesgo.getTableHeader().setReorderingAllowed(false);
         jScrollPane2.setViewportView(tablaNotasRiesgo);
         if (tablaNotasRiesgo.getColumnModel().getColumnCount() > 0) {
             tablaNotasRiesgo.getColumnModel().getColumn(0).setResizable(false);
@@ -543,7 +543,7 @@ public class PanelNotas extends javax.swing.JPanel {
     }//GEN-LAST:event_cboBimestre1ActionPerformed
 
     private void btnCargarAlumnosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCargarAlumnosActionPerformed
-     if (notasController == null) return;
+    if (notasController == null) return;
  
         int idxG = cboGrados.getSelectedIndex();
         int idxC = cboCurso.getSelectedIndex();
@@ -556,8 +556,24 @@ public class PanelNotas extends javax.swing.JPanel {
  
         Integer idGrado = gradosCargados.get(idxG - 1).getId();
         Integer idCurso = cursosCargados.get(idxC - 1).getId();
- 
-        notasController.procesarCargaAlumnos(this, idGrado, idCurso, idxB);
+        
+        try {
+       
+            List<Object[]> filasProcesadas = notasController.obtenerNotasParaGrilla(idGrado, idCurso, idxB);
+            
+           
+            DefaultTableModel modelo = (DefaultTableModel) tablaNotas.getModel();
+            modelo.setRowCount(0);
+            idsRegistrosCargados.clear();
+            
+           
+            for (Object[] fila : filasProcesadas) {
+                idsRegistrosCargados.add((Integer) fila[0]);
+                modelo.addRow(new Object[]{ fila[1], fila[2], fila[3], fila[4], fila[5], fila[6], fila[7] });
+            }
+        } catch (Exception ex) {
+            mostrarMensaje(ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnCargarAlumnosActionPerformed
     
     private void btnGuardarNotasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarNotasActionPerformed
@@ -567,40 +583,36 @@ public class PanelNotas extends javax.swing.JPanel {
         if (modelo.getRowCount() == 0) return;
  
         List<RegistroBimestral> modificados = new ArrayList<>();
+        
         try {
             for (int i = 0; i < modelo.getRowCount(); i++) {
                 RegistroBimestral rb = new RegistroBimestral();
- 
                 rb.setId(idsRegistrosCargados.get(i));
                 rb.setActivo(true);
  
-                // FIX: antes los pesos (0.2/0.2/0.3/0.3) estaban hardcodeados
-                // aquí, duplicando la misma regla de negocio que ya vive en
-                // RegistroBimestralController.obtenerPesoPorTipo(). Estos
-                // objetos Evaluacion son transitorios (solo se usan para
-                // llevar tipo+nota al controller; el peso real que se
-                // persiste sale del controller), pero mantenerlos coherentes
-                // con la única fuente de verdad evita divergencias futuras
-                // si el esquema de ponderación cambia.
-                rb.getEvaluaciones().add(new Evaluacion(null, null, "PRACTICA",
-                        shared.TipoEvaluacion.PRACTICA, Double.parseDouble(modelo.getValueAt(i, 2).toString()),
-                        notasController.obtenerPesoPorTipo(shared.TipoEvaluacion.PRACTICA)));
-                rb.getEvaluaciones().add(new Evaluacion(null, null, "TAREA",
-                        shared.TipoEvaluacion.TAREA, Double.parseDouble(modelo.getValueAt(i, 3).toString()),
-                        notasController.obtenerPesoPorTipo(shared.TipoEvaluacion.TAREA)));
-                rb.getEvaluaciones().add(new Evaluacion(null, null, "PARCIAL",
-                        shared.TipoEvaluacion.PARCIAL, Double.parseDouble(modelo.getValueAt(i, 4).toString()),
-                        notasController.obtenerPesoPorTipo(shared.TipoEvaluacion.PARCIAL)));
-                rb.getEvaluaciones().add(new Evaluacion(null, null, "BIMESTRAL",
-                        shared.TipoEvaluacion.BIMESTRAL, Double.parseDouble(modelo.getValueAt(i, 5).toString()),
-                        notasController.obtenerPesoPorTipo(shared.TipoEvaluacion.BIMESTRAL)));
+                rb.getEvaluaciones().add(new Evaluacion(null, null, "PRACTICA", shared.TipoEvaluacion.PRACTICA, 
+                        Double.parseDouble(modelo.getValueAt(i, 2).toString()), shared.TipoEvaluacion.PRACTICA.getPeso()));
+                
+                rb.getEvaluaciones().add(new Evaluacion(null, null, "TAREA", shared.TipoEvaluacion.TAREA, 
+                        Double.parseDouble(modelo.getValueAt(i, 3).toString()), shared.TipoEvaluacion.TAREA.getPeso()));
+                
+                rb.getEvaluaciones().add(new Evaluacion(null, null, "PARCIAL", shared.TipoEvaluacion.PARCIAL, 
+                        Double.parseDouble(modelo.getValueAt(i, 4).toString()), shared.TipoEvaluacion.PARCIAL.getPeso()));
+                
+                rb.getEvaluaciones().add(new Evaluacion(null, null, "BIMESTRAL", shared.TipoEvaluacion.BIMESTRAL, 
+                        Double.parseDouble(modelo.getValueAt(i, 5).toString()), shared.TipoEvaluacion.BIMESTRAL.getPeso()));
  
                 modificados.add(rb);
             }
-            notasController.procesarActualizacionMasivaNotas(modificados, this);
+          
+            notasController.procesarActualizacionMasivaNotas(modificados);
+            
+            mostrarMensaje("¡Calificaciones guardadas con éxito!", "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            
             btnCargarAlumnosActionPerformed(null);
-        } catch (Exception e)   {
-            mostrarMensaje("Error al procesar el guardado masivo: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            
+        } catch (Exception e) {
+            mostrarMensaje("Error al guardar: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnGuardarNotasActionPerformed
 
@@ -616,8 +628,86 @@ public class PanelNotas extends javax.swing.JPanel {
         }
  
         Integer idGradoReal = gradosCargados.get(indexGrado - 1).getId();
-        notasController.procesarGeneracionReporte(this, idGradoReal, indexBimestre);
+        
+        try {
+            List<Object[]> reporteRiesgo = notasController.obtenerReporteRiesgo(idGradoReal, indexBimestre);
+            
+            DefaultTableModel modeloRiesgo = (DefaultTableModel) tablaNotasRiesgo.getModel();
+            modeloRiesgo.setRowCount(0);
+            
+            for (Object[] fila : reporteRiesgo) {
+                modeloRiesgo.addRow(fila);
+            }
+            
+            mostrarMensaje("Reporte completado. Se hallaron " + reporteRiesgo.size() + " alertas académicas.", "SAD Reportes", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            
+        } catch (Exception ex) {
+            mostrarMensaje(ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnGenerarReporteActionPerformed
+
+    private void cboGradosItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboGradosItemStateChanged
+        if (evt.getStateChange() == java.awt.event.ItemEvent.SELECTED) {
+            
+            if (cboGrados.getSelectedIndex() > 0) {
+                // Restamos 1 porque la lista gradosCargados no tiene el item "-- Seleccione --"
+                int idGradoSeleccionado = gradosCargados.get(cboGrados.getSelectedIndex() - 1).getId();
+                cargarCursosPorGrado(idGradoSeleccionado);
+            } else {
+                cboCurso.removeAllItems();
+                cboCurso.addItem("-- Seleccione Curso --");
+                cboCurso.setEnabled(false);
+                cboBimestre.setEnabled(false);
+                btnCargarAlumnos.setEnabled(false);
+            }
+        }
+    }//GEN-LAST:event_cboGradosItemStateChanged
+
+    private void cboCursoItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboCursoItemStateChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cboCursoItemStateChanged
+
+    private void cboBimestreItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboBimestreItemStateChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cboBimestreItemStateChanged
+
+    private void cboGradoItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboGradoItemStateChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cboGradoItemStateChanged
+
+    private void cboBimestre1ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboBimestre1ItemStateChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cboBimestre1ItemStateChanged
+
+    private void tablaNotasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablaNotasMouseClicked
+        if (evt.getClickCount() == 2) {
+            int filaSeleccionada = tablaNotas.getSelectedRow();
+            
+            if (filaSeleccionada >= 0) {
+                String nombreAlumno = tablaNotas.getValueAt(filaSeleccionada, 1).toString();
+                String cursoSeleccionado = cboCurso.getSelectedItem().toString();
+                String bimestreSeleccionado = cboBimestre.getSelectedItem().toString();
+                
+                Integer idRegistroSeleccionado = idsRegistrosCargados.get(filaSeleccionada);
+                
+                java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
+                
+                DialogDetalleNotas dialog = new DialogDetalleNotas(
+                        (java.awt.Frame) parentWindow, 
+                        true, 
+                        this.notasController, 
+                        idRegistroSeleccionado, 
+                        nombreAlumno, 
+                        cursoSeleccionado,
+                        bimestreSeleccionado
+                );
+                
+                dialog.setVisible(true);
+                
+                btnCargarAlumnosActionPerformed(null);
+            }
+        }
+    }//GEN-LAST:event_tablaNotasMouseClicked
     
     public javax.swing.JTable getTablaNotas() { 
         return tablaNotas; 
