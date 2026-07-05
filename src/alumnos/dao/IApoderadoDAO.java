@@ -12,5 +12,5 @@ import shared.CrudDAO;
  * @author Alexis
  */
 public interface IApoderadoDAO extends CrudDAO<Apoderado> {
-    
+    boolean existeDni(String dni, Integer idExcluido);
 }

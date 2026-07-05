@@ -59,44 +59,6 @@ public class PanelAlumnos extends javax.swing.JPanel {
         }
     }
 
- 
-    private void abrirDialogoEdicion(Alumno alumnoOriginal) {
-        java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
-        if (parentWindow instanceof java.awt.Frame frame) {
-
-            Alumno copiaAlumno = crearCopiaAlumno(alumnoOriginal);
-
-            DialogNuevoAlumno dialog = new DialogNuevoAlumno(frame, true, alumnoController, this, copiaAlumno);
-            dialog.setVisible(true);
-            }
-        }
-    
-    private Alumno crearCopiaAlumno(Alumno original) {
-        Apoderado origAp = original.getApoderado();
-        Apoderado copiaAp = new Apoderado();
-        copiaAp.setId(origAp.getId());
-        copiaAp.setDni(origAp.getDni());
-        copiaAp.setNombres(origAp.getNombres());
-        copiaAp.setApellidos(origAp.getApellidos());
-        copiaAp.setParentesco(origAp.getParentesco());
-        copiaAp.setTelefono(origAp.getTelefono());
-        copiaAp.setCorreo(origAp.getCorreo());
-        copiaAp.setFechaNacimiento(origAp.getFechaNacimiento());
-        copiaAp.setActivo(origAp.isActivo());
-
-        Alumno copiaAlumno = new Alumno();
-        copiaAlumno.setId(original.getId());
-        copiaAlumno.setCodigoEstudiante(original.getCodigoEstudiante());
-        copiaAlumno.setDni(original.getDni());
-        copiaAlumno.setNombres(original.getNombres());
-        copiaAlumno.setApellidos(original.getApellidos());
-        copiaAlumno.setFechaNacimiento(original.getFechaNacimiento());
-        copiaAlumno.setActivo(original.isActivo());
-        copiaAlumno.setApoderado(copiaAp);
-
-        return copiaAlumno;
-    }
-
 
    
     /**
@@ -338,22 +300,18 @@ public class PanelAlumnos extends javax.swing.JPanel {
     private void tablaAlumnosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablaAlumnosMouseClicked
         if (evt.getClickCount() == 2) { 
             int filaSeleccionada = tablaAlumnos.getSelectedRow();
-            
-            if (filaSeleccionada >= 0 && alumnosCargados != null) {
-                String codigoFila = (String) tablaAlumnos.getValueAt(filaSeleccionada, 0);
-                Alumno alumnoSeleccionado = null;       
-                
-                for (int i = 0; i < alumnosCargados.size(); i++) {
-                    Alumno al = alumnosCargados.get(i);
-                    
-                    if (al.getCodigoEstudiante().equals(codigoFila)) {
-                        alumnoSeleccionado = al;
-                        break;
-                    }
-                } 
 
-                if (alumnoSeleccionado != null) {
-                    abrirDialogoEdicion(alumnoSeleccionado);
+            if (filaSeleccionada >= 0) {
+                String codigoFila = (String) tablaAlumnos.getValueAt(filaSeleccionada, 0);
+
+                Alumno alumnoParaEditar = alumnoController.obtenerAlumnoParaEdicion(codigoFila);
+
+                if (alumnoParaEditar != null) {
+                    java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
+                    if (parentWindow instanceof java.awt.Frame frame) {
+                        DialogNuevoAlumno dialog = new DialogNuevoAlumno(frame, true, alumnoController, this, alumnoParaEditar);
+                        dialog.setVisible(true);
+                    }
                 }
             }
         }

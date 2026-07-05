@@ -28,6 +28,16 @@ public class Alumno extends Persona {
         this.apoderado = validarApoderadoObligatorio(apoderado);
     }
     
+    public Alumno(Alumno otroAlumno) {
+        super(otroAlumno.getId(), otroAlumno.getDni(), otroAlumno.getNombres(), otroAlumno.getApellidos(), 
+              otroAlumno.getFechaNacimiento(), otroAlumno.isActivo());
+
+        this.codigoEstudiante = otroAlumno.getCodigoEstudiante();
+        if (otroAlumno.getApoderado() != null) {
+            this.apoderado = new Apoderado(otroAlumno.getApoderado());
+    }
+}
+    
     
 
     private String validarCodigoEstudiante(String codigo) {

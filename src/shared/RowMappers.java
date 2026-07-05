@@ -12,6 +12,9 @@ import notas.model.RegistroBimestral;
 import notas.model.Evaluacion;
 import alumnos.model.Alumno;
 import docentes.model.Docente;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 /**
  *
@@ -22,11 +25,23 @@ public final class RowMappers {
     private RowMappers() {
     }
 
+
+    private static boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
+        java.sql.ResultSetMetaData rsmd = rs.getMetaData();
+        int columns = rsmd.getColumnCount();
+        for (int x = 1; x <= columns; x++) {
+            if (columnName.equalsIgnoreCase(rsmd.getColumnLabel(x))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static final IRowMapper<Evaluacion> EVALUACION_ROW_MAPPER = rs -> {
         Evaluacion evaluacion = new Evaluacion();
         evaluacion.setId(rs.getInt("idEvaluacion"));
         evaluacion.setNombre(rs.getString("nombre"));
-        evaluacion.setTipo(TipoEvaluacion.valueOf(rs.getString("tipo")));
+        evaluacion.setTipo(TipoEvaluacion.valueOf(rs.getString("tipo").trim().toUpperCase()));
         evaluacion.setNota(rs.getDouble("nota"));
         evaluacion.setPeso(rs.getDouble("peso"));
         return evaluacion;
@@ -73,7 +88,6 @@ public final class RowMappers {
                 "ACTIVO".equalsIgnoreCase(rs.getString("estado"))
         );
     };
-    
 
     public static final IRowMapper<Docente> DOCENTE_ROW_MAPPER = rs -> {
         java.sql.Date docFechaNac = rs.getDate("fechaNacimiento");
@@ -101,27 +115,20 @@ public final class RowMappers {
         curso.setHorasSemanales(rs.getInt("horasSemanales"));
         curso.setActivo(rs.getString("estado").equalsIgnoreCase("ACTIVO"));
 
-        
-        try {
-            if (rs.getObject("idGrado") != null) {
-                Grado grado = new Grado();
-                grado.setId(rs.getInt("idGrado"));
-                grado.setNombre(rs.getString("gradoNombre")); 
-                grado.setNivel(rs.getString("gradoNivel"));   
-                curso.asociarGrado(grado);
-            }
-        } catch (java.sql.SQLException e) {
+        if (hasColumn(rs, "idGrado") && rs.getObject("idGrado") != null) {
+            Grado grado = new Grado();
+            grado.setId(rs.getInt("idGrado"));
+            grado.setNombre(rs.getString("gradoNombre")); 
+            grado.setNivel(rs.getString("gradoNivel"));   
+            curso.asociarGrado(grado);
         }
 
-        try {
-            if (rs.getObject("idDocente") != null) {
-                Docente docente = new Docente();
-                docente.setId(rs.getInt("idDocente"));
-                docente.setNombres(rs.getString("docenteNombres"));     
-                docente.setApellidos(rs.getString("docenteApellidos"));
-                curso.setDocente(docente);
-            }
-        } catch (java.sql.SQLException e) {
+        if (hasColumn(rs, "idDocente") && rs.getObject("idDocente") != null) {
+            Docente docente = new Docente();
+            docente.setId(rs.getInt("idDocente"));
+            docente.setNombres(rs.getString("docenteNombres"));     
+            docente.setApellidos(rs.getString("docenteApellidos"));
+            curso.setDocente(docente);
         }
 
         return curso;
@@ -145,13 +152,14 @@ public final class RowMappers {
         rb.setActivo(rs.getString("estado").equalsIgnoreCase("ABIERTO"));
 
         MatriculaCurso mc = new MatriculaCurso();
-        mc.setId(rs.getInt("idMatriculaCurso"));
+        if (hasColumn(rs, "idMatriculaCurso")) {
+            mc.setId(rs.getInt("idMatriculaCurso"));
+        }
 
-        try {
+        if (hasColumn(rs, "cursoNombre")) {
             plan_estudios.model.Curso curso = new plan_estudios.model.Curso();
             curso.setNombre(rs.getString("cursoNombre"));
             mc.setCurso(curso);
-        } catch (Exception e) {
         }
 
         rb.setMatriculaCurso(mc);

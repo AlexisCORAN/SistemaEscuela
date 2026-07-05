@@ -9,7 +9,6 @@ import main.VentanaPrincipal;
 import alumnos.controller.AlumnoController;
 import alumnos.model.Alumno;
 import alumnos.model.Apoderado;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 
@@ -48,26 +47,30 @@ public class DialogNuevoAlumno extends javax.swing.JDialog {
     
     private void cargarDatosEnFormulario() {
         nombrePanel.setText("Modificar Información de Alumno");
-        txtDniAlumno.setText(alumnoEdicion.getDni());
-        txtDniAlumno.setEditable(false); 
-        txtNombresAlumno.setText(alumnoEdicion.getNombres());
-        txtApellidosAlumno.setText(alumnoEdicion.getApellidos());
-        
-        if (alumnoEdicion.getFechaNacimiento() != null) {
-            spinFechaNacimiento.setValue(Date.from(alumnoEdicion.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        cargarDatosAlumno(alumnoEdicion);
+        cargarDatosApoderado(alumnoEdicion.getApoderado());
+    }
+
+    private void cargarDatosAlumno(Alumno alumno) {
+        txtDniAlumno.setText(alumno.getDni());
+        txtDniAlumno.setEditable(false);
+        txtNombresAlumno.setText(alumno.getNombres());
+        txtApellidosAlumno.setText(alumno.getApellidos());
+        if (alumno.getFechaNacimiento() != null) {
+            spinFechaNacimiento.setValue(Date.from(alumno.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()));
         }
-        
-        if (alumnoEdicion.getApoderado() != null) {
-            Apoderado ap = alumnoEdicion.getApoderado();
-            txtDniApoderado.setText(ap.getDni());
-            txtNombresApoderado.setText(ap.getNombres());
-            txtApellidosApoderado.setText(ap.getApellidos());
-            txtParentesco.setText(ap.getParentesco());
-            txtTelefonoApoderado.setText(ap.getTelefono());
-            txtCorreoApoderado.setText(ap.getCorreo());
-            if (ap.getFechaNacimiento() != null) {
-                spinFechaNacimiento1.setValue(Date.from(ap.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-            }
+    }
+
+    private void cargarDatosApoderado(Apoderado ap) {
+        if (ap == null) return;
+        txtDniApoderado.setText(ap.getDni());
+        txtNombresApoderado.setText(ap.getNombres());
+        txtApellidosApoderado.setText(ap.getApellidos());
+        txtParentesco.setText(ap.getParentesco());
+        txtTelefonoApoderado.setText(ap.getTelefono());
+        txtCorreoApoderado.setText(ap.getCorreo());
+        if (ap.getFechaNacimiento() != null) {
+            spinFechaNacimiento1.setValue(Date.from(ap.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()));
         }
     }
 
@@ -487,8 +490,6 @@ public class DialogNuevoAlumno extends javax.swing.JDialog {
 
     private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
         try {
-            boolean exito;
-
             java.util.Date fechaNacAlumno = (java.util.Date) spinFechaNacimiento.getValue();
             String dniAlumno = txtDniAlumno.getText().trim();
             String nombresAlumno = txtNombresAlumno.getText().trim();
@@ -503,7 +504,7 @@ public class DialogNuevoAlumno extends javax.swing.JDialog {
             String correo = txtCorreoApoderado.getText().trim();
 
             if (alumnoEdicion != null) {
-                exito = alumnoController.modificarAlumnoDesdeFormulario(
+                alumnoController.modificarAlumnoDesdeFormulario(
                     alumnoEdicion.getId(), alumnoEdicion.getCodigoEstudiante(), alumnoEdicion.isActivo(),
                     fechaNacAlumno, dniAlumno, nombresAlumno, apellidosAlumno,
                     alumnoEdicion.getApoderado().getId(), alumnoEdicion.getApoderado().isActivo(),
@@ -511,24 +512,26 @@ public class DialogNuevoAlumno extends javax.swing.JDialog {
                     parentesco, telefono, correo
                 );
             } else {
-                exito = alumnoController.registrarAlumnoDesdeFormulario(
+                alumnoController.registrarAlumnoDesdeFormulario(
                     fechaNacAlumno, dniAlumno, nombresAlumno, apellidosAlumno,
                     fechaNacApoderado, dniApoderado, nombresApoderado, apellidosApoderado,
                     parentesco, telefono, correo
                 );
             }
 
-            if (exito) {
-                if (panelPadre != null) panelPadre.refrescarTabla(alumnoController.obtenerAlumnos());
-                this.dispose();
-            } else {
-                mostrarMensajeValidacion("Hubo un error de persistencia. Revise la conexión.");
+            if (panelPadre != null) {
+                panelPadre.refrescarTabla(alumnoController.obtenerAlumnos());
             }
+            this.dispose();
+
         } catch (IllegalArgumentException | IllegalStateException e) {
             mostrarMensajeValidacion(e.getMessage());
         } catch (RuntimeException e) {
-            logger.log(java.util.logging.Level.SEVERE, "Error crítico de sistema al guardar", e);
-            mostrarMensajeValidacion("Ocurrió un error inesperado de sistema. Consulte con soporte.");
+            logger.log(java.util.logging.Level.SEVERE, "Error crítico al guardar", e);
+            mostrarMensajeValidacion("Ocurrió un error en la base de datos: " + e.getMessage());
+        } catch (Exception e) {
+            logger.log(java.util.logging.Level.SEVERE, "Error desconocido", e);
+            mostrarMensajeValidacion("Ocurrió un error inesperado de sistema.");
         }
     }//GEN-LAST:event_btnGuardarActionPerformed
     
