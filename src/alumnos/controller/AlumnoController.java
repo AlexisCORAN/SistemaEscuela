@@ -155,4 +155,70 @@ public class AlumnoController {
             return false;
         }
     }
+    
+    public List<Alumno> obtenerAlumnosPorEstado(String filtroEstado) {
+        if (filtroEstado == null || filtroEstado.equals("TODOS")) {
+            return obtenerAlumnos();
+        }
+
+        boolean esActivo = filtroEstado.equals("ACTIVOS");
+
+        try {
+            final Connection conn = ConexionDB.getInstance().getConexion();
+                final IAlumnoDAO alumnoDAO = new AlumnoDAOImpl(conn); 
+            return alumnoDAO.listarPorEstado(esActivo);
+        } catch (final Exception e) {
+            System.err.println("Error al filtrar alumnos por estado: " + e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+    
+    public boolean registrarAlumnoDesdeFormulario(
+        java.util.Date fechaNacAlumno, String dniAlumno, String nombresAlumno, String apellidosAlumno,
+        java.util.Date fechaNacApoderado, String dniApoderado, String nombresApoderado, String apellidosApoderado,
+        String parentesco, String telefonoApoderado, String correoApoderado) {
+
+        java.time.LocalDate nacAlum = fechaNacAlumno.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+        java.time.LocalDate nacApod = fechaNacApoderado.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+
+        Apoderado apod = new Apoderado(parentesco, telefonoApoderado, correoApoderado, 
+                                       null, dniApoderado, nombresApoderado, apellidosApoderado, nacApod, true);
+
+        Alumno alum = new Alumno("TEMP", apod, null, dniAlumno, nombresAlumno, apellidosAlumno, nacAlum, true);
+
+        return registrarAlumnoYApoderado(alum);
+    }
+
+    public boolean modificarAlumnoDesdeFormulario(
+        Integer idAlumno, String codigoEstudiante, boolean alumnoActivo,
+        java.util.Date fechaNacAlumno, String dniAlumno, String nombresAlumno, String apellidosAlumno,
+        Integer idApoderado, boolean apoderadoActivo,
+        java.util.Date fechaNacApoderado, String dniApoderado, String nombresApoderado, String apellidosApoderado,
+        String parentesco, String telefonoApoderado, String correoApoderado) {
+
+        java.time.LocalDate nacAlum = fechaNacAlumno.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+        java.time.LocalDate nacApod = fechaNacApoderado.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+
+        Apoderado apMod = new Apoderado();
+        apMod.setId(idApoderado);
+        apMod.setDni(dniApoderado);
+        apMod.setNombres(nombresApoderado);
+        apMod.setApellidos(apellidosApoderado);
+        apMod.setParentesco(parentesco);
+        apMod.actualizarContacto(telefonoApoderado, correoApoderado);
+        apMod.setFechaNacimiento(nacApod);
+        apMod.setActivo(apoderadoActivo); 
+
+        Alumno alumMod = new Alumno();
+        alumMod.setId(idAlumno);
+        alumMod.setCodigoEstudiante(codigoEstudiante);
+        alumMod.setDni(dniAlumno);
+        alumMod.setNombres(nombresAlumno);
+        alumMod.setApellidos(apellidosAlumno);
+        alumMod.setFechaNacimiento(nacAlum);
+        alumMod.setActivo(alumnoActivo); 
+        alumMod.setApoderado(apMod);
+
+        return modificarAlumnoYApoderado(alumMod);
+    }
 }

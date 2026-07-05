@@ -13,6 +13,7 @@ import javax.swing.table.DefaultTableModel;
 import main.VentanaPrincipal;
 import notas.controller.RegistroBimestralController;
 import notas.model.Evaluacion;
+import notas.model.RegistroBimestral;
 
 /**
  *
@@ -74,9 +75,12 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
 
         panelPrincipal = new javax.swing.JPanel();
         panelSuperior = new javax.swing.JPanel();
+        panelNombre = new javax.swing.JPanel();
         lblNombrePanel = new javax.swing.JLabel();
         lblNombreAlumno = new javax.swing.JLabel();
         lblGradoAlumno = new javax.swing.JLabel();
+        jPanel1 = new javax.swing.JPanel();
+        btnAgregarNota = new javax.swing.JButton();
         panelCentral = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         panelDatosAlumnoRiesgo = new javax.swing.JTable();
@@ -94,19 +98,38 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
         panelPrincipal.setLayout(new java.awt.BorderLayout());
 
         panelSuperior.setBorder(javax.swing.BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        panelSuperior.setLayout(new javax.swing.BoxLayout(panelSuperior, javax.swing.BoxLayout.Y_AXIS));
+        panelSuperior.setLayout(new java.awt.BorderLayout());
+
+        panelNombre.setLayout(new javax.swing.BoxLayout(panelNombre, javax.swing.BoxLayout.Y_AXIS));
 
         lblNombrePanel.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         lblNombrePanel.setText("Kardex Académico");
-        panelSuperior.add(lblNombrePanel);
+        panelNombre.add(lblNombrePanel);
 
         lblNombreAlumno.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
         lblNombreAlumno.setText("Alumno:  Nombre Alumno");
-        panelSuperior.add(lblNombreAlumno);
+        panelNombre.add(lblNombreAlumno);
 
         lblGradoAlumno.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblGradoAlumno.setText("Grado:  Grado actual");
-        panelSuperior.add(lblGradoAlumno);
+        panelNombre.add(lblGradoAlumno);
+
+        panelSuperior.add(panelNombre, java.awt.BorderLayout.WEST);
+
+        jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.X_AXIS));
+
+        btnAgregarNota.setText("Agregar Nota");
+        btnAgregarNota.setMaximumSize(new java.awt.Dimension(120, 35));
+        btnAgregarNota.setMinimumSize(new java.awt.Dimension(120, 35));
+        btnAgregarNota.setPreferredSize(new java.awt.Dimension(120, 35));
+        btnAgregarNota.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAgregarNotaActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btnAgregarNota);
+
+        panelSuperior.add(jPanel1, java.awt.BorderLayout.EAST);
 
         panelPrincipal.add(panelSuperior, java.awt.BorderLayout.NORTH);
 
@@ -126,7 +149,7 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, true, false
+                false, true, true, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -188,26 +211,69 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
 
         try {
             for (int i = 0; i < modelo.getRowCount(); i++) {
-                double nuevaNota = Double.parseDouble(modelo.getValueAt(i, 2).toString());
+                Object valorNota = modelo.getValueAt(i, 2);
+                if (valorNota == null || valorNota.toString().trim().isEmpty()) continue;
                 
-                Evaluacion e = evaluacionesActuales.get(i);
-                e.setNota(nuevaNota); 
-                cambios.add(e);
+                double nuevaNota = Double.parseDouble(valorNota.toString());
+                String nombreEvalTabla = modelo.getValueAt(i, 1).toString(); // El nombre (que ahora debe ser editable)
+                
+                boolean encontrada = false;
+                for (Evaluacion e : evaluacionesActuales) {
+                    if (e.getNombre().equals(nombreEvalTabla)) {
+                        e.setNota(nuevaNota); 
+                        cambios.add(e);
+                        encontrada = true;
+                        break;
+                    }
+                }
+                
+                if (!encontrada) {
+                    shared.TipoEvaluacion tipoEval = (shared.TipoEvaluacion) modelo.getValueAt(i, 0);
+                    Evaluacion nueva = new Evaluacion(null, null, nombreEvalTabla, tipoEval, nuevaNota, tipoEval.getPeso());
+                    cambios.add(nueva);
+                }
             }
             
             controller.guardarEvaluacionesDetalle(idRegistroBimestralActual, cambios);
             
-            JOptionPane.showMessageDialog(this, "Notas guardadas correctamente.");
+            JOptionPane.showMessageDialog(this, "Notas guardadas correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
             this.dispose();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Por favor ingrese un número válido en la columna Nota.", "Error de Formato", JOptionPane.WARNING_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error al guardar: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error al guardar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-
     }//GEN-LAST:event_btnGuardarNotasActionPerformed
 
     private void btnCerrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarActionPerformed
         this.dispose();
     }//GEN-LAST:event_btnCerrarActionPerformed
+
+    private void btnAgregarNotaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarNotaActionPerformed
+    shared.TipoEvaluacion[] tipos = shared.TipoEvaluacion.values();
+        shared.TipoEvaluacion seleccionado = (shared.TipoEvaluacion) JOptionPane.showInputDialog(this, 
+                "Seleccione el tipo de evaluación:", "Nueva Evaluación", 
+                JOptionPane.QUESTION_MESSAGE, null, tipos, tipos[0]);
+
+        if (seleccionado != null) {
+            try {
+                RegistroBimestral validador = new RegistroBimestral();
+                validador.setEvaluaciones(evaluacionesActuales); 
+                validador.validarNuevaEvaluacion(seleccionado); 
+                
+                String nombreSugerido = "Nuevo " + seleccionado.name();
+                Evaluacion nuevaTemp = new Evaluacion(null, null, nombreSugerido, seleccionado, 0.0, seleccionado.getPeso());
+                
+                evaluacionesActuales.add(nuevaTemp);
+                
+                DefaultTableModel modelo = (DefaultTableModel) panelDatosAlumnoRiesgo.getModel();
+                modelo.addRow(new Object[]{ nuevaTemp.getTipo(), nuevaTemp.getNombre(), nuevaTemp.getNota(), nuevaTemp.getPeso() });
+                
+            } catch (IllegalStateException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Límite Alcanzado", JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_btnAgregarNotaActionPerformed
 
     /**
      * @param args the command line arguments
@@ -223,9 +289,11 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnAgregarNota;
     private javax.swing.JButton btnCerrar;
     private javax.swing.JButton btnGuardarNotas;
     private javax.swing.Box.Filler filler1;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblGradoAlumno;
     private javax.swing.JLabel lblNombreAlumno;
@@ -234,6 +302,7 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
     private javax.swing.JPanel panelCentral;
     private javax.swing.JTable panelDatosAlumnoRiesgo;
     private javax.swing.JPanel panelInferior;
+    private javax.swing.JPanel panelNombre;
     private javax.swing.JPanel panelPrincipal;
     private javax.swing.JPanel panelSuperior;
     // End of variables declaration//GEN-END:variables

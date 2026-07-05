@@ -126,4 +126,14 @@ public class AlumnoDAOImpl implements IAlumnoDAO {
         final String sql = SELECT_BASE + " WHERE P.telefono = ?";
         return JdbcTemplate.query(conexion, sql, RowMappers.ALUMNO_ROW_MAPPER, telefono);
     }
+    
+    @Override
+    public List<Alumno> listarPorEstado(boolean activo) {
+        if (conexion == null) return Collections.emptyList();
+
+        final String estadoDb = activo ? "ACTIVO" : "RETIRADO";
+        final String sql = SELECT_BASE + " WHERE A.estado = ?";
+
+        return JdbcTemplate.query(conexion, sql, RowMappers.ALUMNO_ROW_MAPPER, estadoDb);
+    }
 }

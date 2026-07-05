@@ -487,9 +487,36 @@ public class DialogNuevoAlumno extends javax.swing.JDialog {
 
     private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
         try {
-            final boolean exito = (alumnoEdicion != null) 
-                ? alumnoController.modificarAlumnoYApoderado(actualizarAlumnoDesdeFormulario())
-                : alumnoController.registrarAlumnoYApoderado(obtenerAlumnoDesdeFormulario());
+            boolean exito;
+
+            java.util.Date fechaNacAlumno = (java.util.Date) spinFechaNacimiento.getValue();
+            String dniAlumno = txtDniAlumno.getText().trim();
+            String nombresAlumno = txtNombresAlumno.getText().trim();
+            String apellidosAlumno = txtApellidosAlumno.getText().trim();
+
+            java.util.Date fechaNacApoderado = (java.util.Date) spinFechaNacimiento1.getValue();
+            String dniApoderado = txtDniApoderado.getText().trim();
+            String nombresApoderado = txtNombresApoderado.getText().trim();
+            String apellidosApoderado = txtApellidosApoderado.getText().trim();
+            String parentesco = txtParentesco.getText().trim();
+            String telefono = txtTelefonoApoderado.getText().trim();
+            String correo = txtCorreoApoderado.getText().trim();
+
+            if (alumnoEdicion != null) {
+                exito = alumnoController.modificarAlumnoDesdeFormulario(
+                    alumnoEdicion.getId(), alumnoEdicion.getCodigoEstudiante(), alumnoEdicion.isActivo(),
+                    fechaNacAlumno, dniAlumno, nombresAlumno, apellidosAlumno,
+                    alumnoEdicion.getApoderado().getId(), alumnoEdicion.getApoderado().isActivo(),
+                    fechaNacApoderado, dniApoderado, nombresApoderado, apellidosApoderado,
+                    parentesco, telefono, correo
+                );
+            } else {
+                exito = alumnoController.registrarAlumnoDesdeFormulario(
+                    fechaNacAlumno, dniAlumno, nombresAlumno, apellidosAlumno,
+                    fechaNacApoderado, dniApoderado, nombresApoderado, apellidosApoderado,
+                    parentesco, telefono, correo
+                );
+            }
 
             if (exito) {
                 if (panelPadre != null) panelPadre.refrescarTabla(alumnoController.obtenerAlumnos());
@@ -505,40 +532,6 @@ public class DialogNuevoAlumno extends javax.swing.JDialog {
         }
     }//GEN-LAST:event_btnGuardarActionPerformed
     
-    private Alumno obtenerAlumnoDesdeFormulario() {
-        LocalDate nacAlum = ((Date) spinFechaNacimiento.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        LocalDate nacApod = ((Date) spinFechaNacimiento1.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-        Apoderado apod = new Apoderado(txtParentesco.getText().trim(), txtTelefonoApoderado.getText().trim(), txtCorreoApoderado.getText().trim(), 
-                                       null, txtDniApoderado.getText().trim(), txtNombresApoderado.getText().trim(), txtApellidosApoderado.getText().trim(), nacApod, true);
-
-        Alumno alum = new Alumno("TEMP", apod, null, txtDniAlumno.getText().trim(), txtNombresAlumno.getText().trim(), txtApellidosAlumno.getText().trim(), nacAlum, true);
-        return alum;
-    }
-
-    private Alumno actualizarAlumnoDesdeFormulario() {
-        Alumno alumMod = new Alumno();
-        alumMod.setId(alumnoEdicion.getId());
-        alumMod.setCodigoEstudiante(alumnoEdicion.getCodigoEstudiante());
-        alumMod.setDni(txtDniAlumno.getText().trim());
-        alumMod.setNombres(txtNombresAlumno.getText().trim());
-        alumMod.setApellidos(txtApellidosAlumno.getText().trim());
-        alumMod.setFechaNacimiento(((Date) spinFechaNacimiento.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-        alumMod.setActivo(alumnoEdicion.isActivo()); 
-
-        Apoderado apMod = new Apoderado();
-        apMod.setId(alumnoEdicion.getApoderado().getId());
-        apMod.setDni(txtDniApoderado.getText().trim());
-        apMod.setNombres(txtNombresApoderado.getText().trim());
-        apMod.setApellidos(txtApellidosApoderado.getText().trim());
-        apMod.setParentesco(txtParentesco.getText().trim());
-        apMod.actualizarContacto(txtTelefonoApoderado.getText().trim(), txtCorreoApoderado.getText().trim());
-        apMod.setFechaNacimiento(((Date) spinFechaNacimiento1.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-        apMod.setActivo(alumnoEdicion.getApoderado().isActivo()); 
-
-        alumMod.setApoderado(apMod);
-        return alumMod;
-    }
     
     public void mostrarMensajeValidacion(String mensaje) {
         javax.swing.JOptionPane.showMessageDialog(this, mensaje, "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);

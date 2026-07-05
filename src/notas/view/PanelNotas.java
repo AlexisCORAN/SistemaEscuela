@@ -98,6 +98,8 @@ public class PanelNotas extends javax.swing.JPanel {
         header2.setBackground(new java.awt.Color(245, 245, 245));
         header2.setOpaque(true);
         header2.setReorderingAllowed(false);
+        jScrollPane1.getViewport().setBackground(java.awt.Color.WHITE);
+        jScrollPane2.getViewport().setBackground(java.awt.Color.WHITE);
     }
 
     /**
@@ -310,7 +312,7 @@ public class PanelNotas extends javax.swing.JPanel {
         panelRegistroNotas.add(panelCabecera, java.awt.BorderLayout.NORTH);
 
         jScrollPane1.setBackground(new java.awt.Color(255, 255, 255));
-        jScrollPane1.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        jScrollPane1.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         jScrollPane1.setOpaque(false);
 
         tablaNotas.setModel(new javax.swing.table.DefaultTableModel(
@@ -329,7 +331,7 @@ public class PanelNotas extends javax.swing.JPanel {
                 {null, null, null, null, null, null, null}
             },
             new String [] {
-                "Código", "Alumno", "P. Calificada", "Tarea Académica", "Ex. Parcial", "Ex. Bimestral", "Prom. Bimestre"
+                "Código", "Alumno", "Prom. Calificada", "Prom.Tarea académica", "Ex. Parcial", "Ex. Bimestral", "Prom. Bimestre"
             }
         ) {
             boolean[] canEdit = new boolean [] {
@@ -343,9 +345,9 @@ public class PanelNotas extends javax.swing.JPanel {
         tablaNotas.setFillsViewportHeight(true);
         tablaNotas.setGridColor(new java.awt.Color(230, 230, 230));
         tablaNotas.setOpaque(false);
-        tablaNotas.setRowHeight(35);
+        tablaNotas.setRowHeight(50);
         tablaNotas.setShowGrid(false);
-        tablaNotas.setShowVerticalLines(false);
+        tablaNotas.setShowHorizontalLines(true);
         tablaNotas.getTableHeader().setReorderingAllowed(false);
         tablaNotas.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -454,6 +456,7 @@ public class PanelNotas extends javax.swing.JPanel {
         jScrollPane2.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         jScrollPane2.setOpaque(false);
 
+        tablaNotasRiesgo.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         tablaNotasRiesgo.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null},
@@ -483,9 +486,9 @@ public class PanelNotas extends javax.swing.JPanel {
         });
         tablaNotasRiesgo.setFillsViewportHeight(true);
         tablaNotasRiesgo.setGridColor(new java.awt.Color(230, 230, 230));
-        tablaNotasRiesgo.setRowHeight(35);
+        tablaNotasRiesgo.setRowHeight(50);
         tablaNotasRiesgo.setShowGrid(false);
-        tablaNotasRiesgo.setShowVerticalLines(false);
+        tablaNotasRiesgo.setShowHorizontalLines(true);
         tablaNotasRiesgo.getTableHeader().setReorderingAllowed(false);
         jScrollPane2.setViewportView(tablaNotasRiesgo);
         if (tablaNotasRiesgo.getColumnModel().getColumnCount() > 0) {

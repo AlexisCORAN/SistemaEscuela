@@ -131,4 +131,20 @@ public class RegistroBimestral {
                        (bimestral * TipoEvaluacion.BIMESTRAL.getPeso());
         return Math.round(total * 100.0) / 100.0;
     }
+    
+    public void validarNuevaEvaluacion(TipoEvaluacion tipo) {
+        long contador = this.evaluaciones.stream().filter(e -> e.getTipo() == tipo).count();
+        
+        if ((tipo == TipoEvaluacion.PARCIAL || tipo == TipoEvaluacion.BIMESTRAL) && contador >= 1) {
+            throw new IllegalStateException("Error: Solo se permite registrar un " + tipo.name() + " por bimestre.");
+        }
+        
+        if (tipo == TipoEvaluacion.PRACTICA && contador >= 4) {
+            throw new IllegalStateException("Error: El límite máximo es de 4 Prácticas Calificadas por bimestre.");
+        }
+        
+        if (tipo == TipoEvaluacion.TAREA && contador >= 4) {
+            throw new IllegalStateException("Error: El límite máximo es de 4 Tareas Académicas por bimestre.");
+        }
+    }
 }

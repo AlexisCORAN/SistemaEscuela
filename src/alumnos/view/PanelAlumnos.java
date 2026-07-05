@@ -360,35 +360,13 @@ public class PanelAlumnos extends javax.swing.JPanel {
     }//GEN-LAST:event_tablaAlumnosMouseClicked
 
     private void cboEstadoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboEstadoActionPerformed
-        if (alumnoController == null || alumnosCargados == null) return;
+        if (alumnoController == null) return;
     
-    String seleccion = (String) cboEstado.getSelectedItem();
-    List<Alumno> totalAlumnos = alumnoController.obtenerAlumnos();
-    
-   
-        switch (seleccion) {
-            case "TODOS" -> refrescarTabla(totalAlumnos);
-            case "ACTIVOS" -> {
-                List<Alumno> activos = new ArrayList<>();
-                for (int i = 0; i < totalAlumnos.size(); i++) {
-                    Alumno al = totalAlumnos.get(i);
-                    if (al.isActivo()) {
-                        activos.add(al);
-                    }
-                }       refrescarTabla(activos);
-            }
-            case "RETIRADOS" -> {
-                List<Alumno> retirados = new ArrayList<>();
-                for (int i = 0; i < totalAlumnos.size(); i++) {
-                    Alumno al = totalAlumnos.get(i);
-                    if (!al.isActivo()) {
-                        retirados.add(al);
-                    }
-                }       refrescarTabla(retirados);
-            }
-            default -> {
-            }
-        }
+        String seleccion = (String) cboEstado.getSelectedItem();
+
+        List<Alumno> resultadosFiltrados = alumnoController.obtenerAlumnosPorEstado(seleccion);
+
+        refrescarTabla(resultadosFiltrados);
     }//GEN-LAST:event_cboEstadoActionPerformed
 
     public void mostrarError(String mensaje) {

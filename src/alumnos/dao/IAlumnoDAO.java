@@ -17,4 +17,5 @@ public interface IAlumnoDAO extends CrudDAO<Alumno> {
     List<Alumno> listarPorApoderado(Integer IdApoderado);
     List<Alumno> listarPorTelefonoApoderado(String telefono);
     String obtenerUltimoCodigo();
+    List<Alumno> listarPorEstado(boolean activo);
 }
