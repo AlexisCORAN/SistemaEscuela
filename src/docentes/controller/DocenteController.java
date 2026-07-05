@@ -92,9 +92,9 @@ public class DocenteController {
         if (docente == null) return false;
         try {
                 final Connection conn = ConexionDB.getInstance().getConexion();
-            final IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
-            docente.setActivo(false);
-            return docenteDAO.actualizar(docente);
+                final IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
+                docente.setActivo(false);
+                return docenteDAO.actualizar(docente);
         } catch (final Exception e) {
             System.err.println("Error al procesar baja: " + e.getMessage());
             return false;

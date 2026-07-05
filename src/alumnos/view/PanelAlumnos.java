@@ -77,6 +77,9 @@ public class PanelAlumnos extends javax.swing.JPanel {
         nombrePanel = new javax.swing.JLabel();
         filler4 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 50), new java.awt.Dimension(0, 50), new java.awt.Dimension(32767, 32767));
         panelAgregar = new javax.swing.JPanel();
+        filler6 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        btnBajaAlumno = new javax.swing.JButton();
+        filler7 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
         btnNuevo = new javax.swing.JButton();
         filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15));
         panelBusqueda = new javax.swing.JPanel();
@@ -118,7 +121,22 @@ public class PanelAlumnos extends javax.swing.JPanel {
         panelAgregar.setMinimumSize(new java.awt.Dimension(400, 35));
         panelAgregar.setOpaque(false);
         panelAgregar.setPreferredSize(new java.awt.Dimension(32767, 35));
-        panelAgregar.setLayout(new java.awt.BorderLayout());
+        panelAgregar.setLayout(new javax.swing.BoxLayout(panelAgregar, javax.swing.BoxLayout.X_AXIS));
+        panelAgregar.add(filler6);
+
+        btnBajaAlumno.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        btnBajaAlumno.setText("Dar baja Alumno");
+        btnBajaAlumno.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnBajaAlumno.setMaximumSize(new java.awt.Dimension(140, 35));
+        btnBajaAlumno.setMinimumSize(new java.awt.Dimension(140, 35));
+        btnBajaAlumno.setPreferredSize(new java.awt.Dimension(140, 35));
+        btnBajaAlumno.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBajaAlumnoActionPerformed(evt);
+            }
+        });
+        panelAgregar.add(btnBajaAlumno);
+        panelAgregar.add(filler7);
 
         btnNuevo.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         btnNuevo.setText("Nuevo Alumno");
@@ -131,7 +149,7 @@ public class PanelAlumnos extends javax.swing.JPanel {
                 btnNuevoActionPerformed(evt);
             }
         });
-        panelAgregar.add(btnNuevo, java.awt.BorderLayout.EAST);
+        panelAgregar.add(btnNuevo);
 
         panelSuperior.add(panelAgregar);
         panelSuperior.add(filler3);
@@ -327,6 +345,41 @@ public class PanelAlumnos extends javax.swing.JPanel {
         refrescarTabla(resultadosFiltrados);
     }//GEN-LAST:event_cboEstadoActionPerformed
 
+    private void btnBajaAlumnoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBajaAlumnoActionPerformed
+    int filaSeleccionada = tablaAlumnos.getSelectedRow();
+
+    if (filaSeleccionada == -1) {
+        mostrarError("Por favor, seleccione un alumno de la tabla.");
+        return;
+    }
+
+    
+    String codigo = (String) tablaAlumnos.getValueAt(filaSeleccionada, 0);
+    
+    Alumno alumnoParaBaja = alumnosCargados.stream()
+            .filter(a -> a.getCodigoEstudiante().equals(codigo))
+            .findFirst()
+            .orElse(null);
+
+    if (alumnoParaBaja == null) return;
+
+    int confirmacion = javax.swing.JOptionPane.showConfirmDialog(this, 
+            "¿Está seguro de dar de baja al alumno " + alumnoParaBaja.getNombreCompleto() + "?", 
+            "Confirmar Baja", 
+            javax.swing.JOptionPane.YES_NO_OPTION);
+
+    if (confirmacion == javax.swing.JOptionPane.YES_OPTION) {
+        boolean resultado = alumnoController.procesarBajaAlumno(alumnoParaBaja);
+
+        if (resultado) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Alumno dado de baja correctamente.");
+            refrescarTabla(alumnoController.obtenerAlumnos());
+        } else {
+            mostrarError("No se pudo procesar la baja. Intente nuevamente.");
+        }
+    }
+    }//GEN-LAST:event_btnBajaAlumnoActionPerformed
+
     public void mostrarError(String mensaje) {
         javax.swing.JOptionPane.showMessageDialog(this, mensaje, "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
     }
@@ -344,6 +397,7 @@ public class PanelAlumnos extends javax.swing.JPanel {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnBajaAlumno;
     private javax.swing.JButton btnBuscar;
     private javax.swing.JButton btnNuevo;
     private javax.swing.JComboBox<String> cboEstado;
@@ -352,6 +406,8 @@ public class PanelAlumnos extends javax.swing.JPanel {
     private javax.swing.Box.Filler filler3;
     private javax.swing.Box.Filler filler4;
     private javax.swing.Box.Filler filler5;
+    private javax.swing.Box.Filler filler6;
+    private javax.swing.Box.Filler filler7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel nombrePanel;
     private javax.swing.JPanel panelAgregar;
