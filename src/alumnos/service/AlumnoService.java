@@ -3,19 +3,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package alumnos.service;
-import java.sql.Connection;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-
 import alumnos.dao.AlumnoDAOImpl;
 import alumnos.dao.ApoderadoDAOImpl;
 import alumnos.dao.IAlumnoDAO;
 import alumnos.dao.IApoderadoDAO;
 import alumnos.model.Alumno;
-import alumnos.model.Apoderado;
 import java.sql.Connection;
 import java.sql.SQLException;
 import config.ConexionDB;
@@ -39,17 +33,15 @@ public class AlumnoService {
         }
     }
 
-    public List<Alumno> buscarPorCodigo(String criterio) {
-        if (criterio == null || criterio.trim().isEmpty() || criterio.equals("Buscar por Código")) {
-            return obtenerAlumnos();
-        }
+    public Alumno buscarAlumnoPorCodigoExacto(String codigo) {
+        if (codigo == null || codigo.isBlank()) return null;
+
         try (Connection conn = ConexionDB.getInstance().getConexion()) {
             IAlumnoDAO alumnoDAO = new AlumnoDAOImpl(conn);
-            Alumno resultado = alumnoDAO.buscarPorCodigo(criterio.trim());
-            return resultado != null ? List.of(resultado) : Collections.emptyList();
-        } catch (Exception e) {
-            System.err.println("Error al buscar alumno: " + e.getMessage());
-            return Collections.emptyList();
+            return alumnoDAO.buscarPorCodigo(codigo.trim());
+        } catch (SQLException e) {
+            System.err.println("Error al buscar alumno exacto: " + e.getMessage());
+            return null;
         }
     }
 
@@ -67,25 +59,14 @@ public class AlumnoService {
         }
     }
 
-    public void registrarAlumnoDesdeFormulario(
-        Date fechaNacAlumno, String dniAlumno, String nombresAlumno, String apellidosAlumno,
-        Date fechaNacApoderado, String dniApoderado, String nombresApoderado, String apellidosApoderado,
-        String parentesco, String telefonoApoderado, String correoApoderado) 
-        {
-            validarExistenciaDnis(dniAlumno, dniApoderado, null, null);
-            LocalDate nacAlum = fechaNacAlumno.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            LocalDate nacApod = fechaNacApoderado.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    public void registrarAlumno(Alumno alumno) {
+        validarExistenciaDnis(alumno.getDni(), alumno.getApoderado().getDni(), null, null);
 
-            Apoderado apoderado = new Apoderado(parentesco, telefonoApoderado, correoApoderado, 
-                                                null, dniApoderado, nombresApoderado, apellidosApoderado, nacApod, true);
-
-            Alumno alumno = new Alumno("TEMP", apoderado, null, dniAlumno, nombresAlumno, apellidosAlumno, nacAlum, true);
-
-            TransactionRunner.ejecutar(conn -> {
+        TransactionRunner.ejecutar(conn -> {
             IApoderadoDAO apoderadoDAO = new ApoderadoDAOImpl(conn);
             IAlumnoDAO alumnoDAO = new AlumnoDAOImpl(conn);
 
-            if (!apoderadoDAO.insertar(apoderado)) {
+            if (!apoderadoDAO.insertar(alumno.getApoderado())) {
                 throw new RuntimeException("Error al registrar el apoderado en la base de datos.");
             }
 
@@ -98,50 +79,23 @@ public class AlumnoService {
         }, null);
     }
 
-    public void modificarAlumnoDesdeFormulario(
-        Integer idAlumno, String codigoEstudiante, boolean alumnoActivo,
-        Date fechaNacAlumno, String dniAlumno, String nombresAlumno, String apellidosAlumno,
-        Integer idApoderado, boolean apoderadoActivo,
-        Date fechaNacApoderado, String dniApoderado, String nombresApoderado, String apellidosApoderado,
-        String parentesco, String telefonoApoderado, String correoApoderado) 
-        {
-            validarExistenciaDnis(dniAlumno, dniApoderado, idAlumno, idApoderado);
-            
-            LocalDate nacAlum = fechaNacAlumno.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            LocalDate nacApod = fechaNacApoderado.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    public void actualizarAlumno(Alumno alumno) {
+        validarExistenciaDnis(alumno.getDni(), alumno.getApoderado().getDni(), alumno.getId(), alumno.getApoderado().getId());
 
-            Apoderado apMod = new Apoderado(parentesco, telefonoApoderado, correoApoderado, 
-                                            idApoderado, dniApoderado, nombresApoderado, apellidosApoderado, 
-                                            nacApod, apoderadoActivo);
-
-            Alumno alumMod = new Alumno(codigoEstudiante, apMod, idAlumno, dniAlumno, 
-                                        nombresAlumno, apellidosAlumno, nacAlum, alumnoActivo);
-
-            TransactionRunner.ejecutar(conn -> {
+        TransactionRunner.ejecutar(conn -> {
             IApoderadoDAO apoderadoDAO = new ApoderadoDAOImpl(conn);
             IAlumnoDAO alumnoDAO = new AlumnoDAOImpl(conn);
 
-            if (!apoderadoDAO.actualizar(alumMod.getApoderado())) {
+            if (!apoderadoDAO.actualizar(alumno.getApoderado())) {
                 throw new RuntimeException("Error al actualizar los datos del apoderado.");
             }
-            if (!alumnoDAO.actualizar(alumMod)) {
+            if (!alumnoDAO.actualizar(alumno)) {
                 throw new RuntimeException("Error al actualizar los datos del alumno.");
             }
             return null;
         }, null);
     }
 
-    public boolean procesarBajaAlumno(Alumno alumno) {
-        if (alumno == null) return false;
-        try (Connection conn = ConexionDB.getInstance().getConexion()) {
-            IAlumnoDAO alumnoDAO = new AlumnoDAOImpl(conn);
-            alumno.setActivo(false);
-            return alumnoDAO.actualizar(alumno);
-        } catch (Exception e) {
-            System.err.println("Error al procesar baja: " + e.getMessage());
-            return false;
-        }
-    }
 
     private void generarYAsignarCodigo(Alumno alumno, IAlumnoDAO alumnoDAO) {
         String ultimoCod = alumnoDAO.obtenerUltimoCodigo();
@@ -172,6 +126,46 @@ public class AlumnoService {
             throw new RuntimeException("Error en validación de base de datos", e);
         }
     }
+    
+    public void procesarBajaPorCodigo(String codigoEstudiante) {
+        TransactionRunner.ejecutar(conn -> {
+            IAlumnoDAO alumnoDAO = new AlumnoDAOImpl(conn);
+            Alumno alumno = alumnoDAO.buscarPorCodigo(codigoEstudiante);
 
+            if (alumno == null) {
+                throw new IllegalArgumentException("No se encontró el alumno con código: " + codigoEstudiante);
+            }
+            if (!alumno.isActivo()) {
+                throw new IllegalArgumentException("El alumno ya se encuentra dado de baja.");
+            }
+            alumno.setActivo(false); 
 
+            if (!alumnoDAO.actualizar(alumno)) {
+                throw new RuntimeException("Error al dar de baja en la base de datos.");
+            }            
+            return null;
+        }, null);
+    }
+
+    public void procesarReactivacionPorCodigo(String codigoEstudiante) {
+        TransactionRunner.ejecutar(conn -> {
+            IAlumnoDAO alumnoDAO = new AlumnoDAOImpl(conn);
+            Alumno alumno = alumnoDAO.buscarPorCodigo(codigoEstudiante);
+
+            if (alumno == null) {
+                throw new IllegalArgumentException("No se encontró el alumno con código: " + codigoEstudiante);
+            }
+            
+            if (alumno.isActivo()) {
+                throw new IllegalArgumentException("El alumno ya se encuentra activo.");
+            }
+
+            alumno.setActivo(true); 
+
+            if (!alumnoDAO.actualizar(alumno)) {
+                throw new RuntimeException("Error al reactivar en la base de datos.");
+            }
+            return null;
+        }, null);
+    }
 }

@@ -35,6 +35,16 @@ public class Curso {
         this.gradoAsignado = gradoAsignado;
         this.activo = activo;
     }
+    
+    public Curso(Curso otroCurso) {
+    this.id = otroCurso.getId();
+    this.codigo = otroCurso.getCodigo();
+    this.nombre = otroCurso.getNombre();
+    this.horasSemanales = otroCurso.getHorasSemanales();
+    this.docente = otroCurso.getDocente();
+    this.gradoAsignado = otroCurso.getGradoAsignado();
+    this.activo = otroCurso.isActivo();
+}
 
     private String validarTextoRequerido(String texto, String nombreCampo) {
         String textoValidado = Objects.requireNonNull(texto, nombreCampo + " no pueden ser nulo").trim();

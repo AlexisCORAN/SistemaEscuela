@@ -5,6 +5,7 @@ import docentes.model.Docente;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import main.VentanaPrincipal;
+import shared.IDataListener;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -19,7 +20,7 @@ public class DialogNuevoDocente extends javax.swing.JDialog {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(DialogNuevoDocente.class.getName());
     private final DocenteController docenteController;
-    private final PanelDocentes panelPadre;
+    private final IDataListener listener;
     private final Docente docenteEdicion;
     
     /**
@@ -27,13 +28,12 @@ public class DialogNuevoDocente extends javax.swing.JDialog {
      * @param parent
      * @param modal
      * @param docenteController
-     * @param panelPadre
      * @param docenteEdicion
      */
-    public DialogNuevoDocente(java.awt.Frame parent, boolean modal, DocenteController docenteController, PanelDocentes panelPadre, Docente docenteEdicion) {
+    public DialogNuevoDocente(java.awt.Frame parent, boolean modal, DocenteController docenteController, IDataListener listener, Docente docenteEdicion) {
         super(parent, modal);
         this.docenteController = docenteController;
-        this.panelPadre = panelPadre;
+        this.listener = listener;
         this.docenteEdicion = docenteEdicion;
         initComponents();
         this.setLocationRelativeTo(parent);
@@ -44,10 +44,10 @@ public class DialogNuevoDocente extends javax.swing.JDialog {
     
     private void cargarDatosEnFormulario() {
         nombrePanel.setText("Modificar Información del Docente");
-        txtDniAlumno.setText(docenteEdicion.getDni());
-        txtDniAlumno.setEditable(false); 
-        txtNombresAlumno.setText(docenteEdicion.getNombres());
-        txtApellidosAlumno.setText(docenteEdicion.getApellidos());
+        txtDniDocente.setText(docenteEdicion.getDni());
+        txtDniDocente.setEditable(false); 
+        txtNombresDocente.setText(docenteEdicion.getNombres());
+        txtApellidosDocente.setText(docenteEdicion.getApellidos());
         txtTituloProfesional.setText(docenteEdicion.getTituloProfesional());
         txtEspecialidadAcademica.setText(docenteEdicion.getEspecialidadAcademica());
         txtTelefono.setText(docenteEdicion.getTelefono());
@@ -79,15 +79,15 @@ public class DialogNuevoDocente extends javax.swing.JDialog {
         panelRowDni = new javax.swing.JPanel();
         lblDniAlumno = new javax.swing.JLabel();
         filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0));
-        txtDniAlumno = new javax.swing.JTextField();
+        txtDniDocente = new javax.swing.JTextField();
         panelRowNombres = new javax.swing.JPanel();
         lblNombresAlumno = new javax.swing.JLabel();
         filler4 = new javax.swing.Box.Filler(new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0));
-        txtNombresAlumno = new javax.swing.JTextField();
+        txtNombresDocente = new javax.swing.JTextField();
         panelRowApellidos = new javax.swing.JPanel();
         lblApellidosAlumno = new javax.swing.JLabel();
         filler5 = new javax.swing.Box.Filler(new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0));
-        txtApellidosAlumno = new javax.swing.JTextField();
+        txtApellidosDocente = new javax.swing.JTextField();
         panelRowFechaNacimiento = new javax.swing.JPanel();
         lblFechaNacimientoAlumno = new javax.swing.JLabel();
         filler6 = new javax.swing.Box.Filler(new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0));
@@ -151,15 +151,15 @@ public class DialogNuevoDocente extends javax.swing.JDialog {
         panelRowDni.add(lblDniAlumno);
         panelRowDni.add(filler3);
 
-        txtDniAlumno.setMaximumSize(new java.awt.Dimension(32767, 35));
-        txtDniAlumno.setMinimumSize(new java.awt.Dimension(250, 35));
-        txtDniAlumno.setPreferredSize(new java.awt.Dimension(250, 35));
-        txtDniAlumno.addActionListener(new java.awt.event.ActionListener() {
+        txtDniDocente.setMaximumSize(new java.awt.Dimension(32767, 35));
+        txtDniDocente.setMinimumSize(new java.awt.Dimension(250, 35));
+        txtDniDocente.setPreferredSize(new java.awt.Dimension(250, 35));
+        txtDniDocente.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtDniAlumnoActionPerformed(evt);
+                txtDniDocenteActionPerformed(evt);
             }
         });
-        panelRowDni.add(txtDniAlumno);
+        panelRowDni.add(txtDniDocente);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -178,10 +178,10 @@ public class DialogNuevoDocente extends javax.swing.JDialog {
         panelRowNombres.add(lblNombresAlumno);
         panelRowNombres.add(filler4);
 
-        txtNombresAlumno.setMaximumSize(new java.awt.Dimension(32767, 35));
-        txtNombresAlumno.setMinimumSize(new java.awt.Dimension(250, 35));
-        txtNombresAlumno.setPreferredSize(new java.awt.Dimension(250, 35));
-        panelRowNombres.add(txtNombresAlumno);
+        txtNombresDocente.setMaximumSize(new java.awt.Dimension(32767, 35));
+        txtNombresDocente.setMinimumSize(new java.awt.Dimension(250, 35));
+        txtNombresDocente.setPreferredSize(new java.awt.Dimension(250, 35));
+        panelRowNombres.add(txtNombresDocente);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -200,10 +200,10 @@ public class DialogNuevoDocente extends javax.swing.JDialog {
         panelRowApellidos.add(lblApellidosAlumno);
         panelRowApellidos.add(filler5);
 
-        txtApellidosAlumno.setMaximumSize(new java.awt.Dimension(32767, 35));
-        txtApellidosAlumno.setMinimumSize(new java.awt.Dimension(250, 35));
-        txtApellidosAlumno.setPreferredSize(new java.awt.Dimension(250, 35));
-        panelRowApellidos.add(txtApellidosAlumno);
+        txtApellidosDocente.setMaximumSize(new java.awt.Dimension(32767, 35));
+        txtApellidosDocente.setMinimumSize(new java.awt.Dimension(250, 35));
+        txtApellidosDocente.setPreferredSize(new java.awt.Dimension(250, 35));
+        panelRowApellidos.add(txtApellidosDocente);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -366,27 +366,32 @@ public class DialogNuevoDocente extends javax.swing.JDialog {
         this.dispose();
     }//GEN-LAST:event_btnCancelarActionPerformed
 
-    private void txtDniAlumnoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDniAlumnoActionPerformed
+    private void txtDniDocenteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDniDocenteActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_txtDniAlumnoActionPerformed
+    }//GEN-LAST:event_txtDniDocenteActionPerformed
 
     private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
+       Docente docente;
         try {
-            final boolean exito = (docenteEdicion != null) 
-                ? docenteController.actualizarDocente(actualizarDocenteDesdeFormulario())
-                : docenteController.registrarDocente(obtenerDocenteDesdeFormulario());
-
-            if (exito) {
-                if (panelPadre != null) panelPadre.refrescarTabla(docenteController.obtenerDocentes());
-                this.dispose();
-            } else {
-                mostrarMensajeValidacion("No se pudo guardar el registro. Verifique los datos o la conexión.");
-            }
+            docente = (docenteEdicion != null)
+                ? actualizarDocenteDesdeFormulario()
+                : obtenerDocenteDesdeFormulario();
         } catch (IllegalArgumentException | IllegalStateException e) {
             mostrarMensajeValidacion(e.getMessage());
-        } catch (RuntimeException e) {
-            logger.log(java.util.logging.Level.SEVERE, "Error crítico de sistema al guardar", e);
-            mostrarMensajeValidacion("Ocurrió un error inesperado de sistema. Consulte con soporte.");
+            return;
+        }
+
+        String error = (docenteEdicion != null)
+            ? docenteController.actualizarDocente(docente)
+            : docenteController.registrarDocente(docente);
+
+        if (error == null) {
+            if (listener != null) {
+                listener.onDataChanged();
+            }
+            this.dispose();
+        } else {
+            mostrarMensajeValidacion(error);
         }
 
     }//GEN-LAST:event_btnGuardarActionPerformed
@@ -395,17 +400,17 @@ public class DialogNuevoDocente extends javax.swing.JDialog {
         LocalDate nacDocente = ((java.util.Date) spinFechaNacimiento.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
         return new Docente("TEMP", txtTituloProfesional.getText().trim(), txtEspecialidadAcademica.getText().trim(), 
-                           txtCorreo.getText().trim(), txtTelefono.getText().trim(), null, txtDniAlumno.getText().trim(), 
-                           txtNombresAlumno.getText().trim(), txtApellidosAlumno.getText().trim(), nacDocente, true);
+                           txtCorreo.getText().trim(), txtTelefono.getText().trim(), null, txtDniDocente.getText().trim(), 
+                           txtNombresDocente.getText().trim(), txtApellidosDocente.getText().trim(), nacDocente, true);
     }
 
     private Docente actualizarDocenteDesdeFormulario() {
         Docente docMod = new Docente();
         docMod.setId(docenteEdicion.getId());
         docMod.setCodigoDocente(docenteEdicion.getCodigoDocente());
-        docMod.setDni(txtDniAlumno.getText().trim());
-        docMod.setNombres(txtNombresAlumno.getText().trim());
-        docMod.setApellidos(txtApellidosAlumno.getText().trim());
+        docMod.setDni(txtDniDocente.getText().trim());
+        docMod.setNombres(txtNombresDocente.getText().trim());
+        docMod.setApellidos(txtApellidosDocente.getText().trim());
         docMod.setTituloProfesional(txtTituloProfesional.getText().trim());
         docMod.setEspecialidadAcademica(txtEspecialidadAcademica.getText().trim());
         docMod.actualizarContacto(txtTelefono.getText().trim(), txtCorreo.getText().trim());
@@ -469,11 +474,11 @@ public class DialogNuevoDocente extends javax.swing.JDialog {
     private javax.swing.JPanel panelRowTituloProfesional;
     private javax.swing.JPanel panelSuperior;
     private javax.swing.JSpinner spinFechaNacimiento;
-    private javax.swing.JTextField txtApellidosAlumno;
+    private javax.swing.JTextField txtApellidosDocente;
     private javax.swing.JTextField txtCorreo;
-    private javax.swing.JTextField txtDniAlumno;
+    private javax.swing.JTextField txtDniDocente;
     private javax.swing.JTextField txtEspecialidadAcademica;
-    private javax.swing.JTextField txtNombresAlumno;
+    private javax.swing.JTextField txtNombresDocente;
     private javax.swing.JTextField txtTelefono;
     private javax.swing.JTextField txtTituloProfesional;
     // End of variables declaration//GEN-END:variables

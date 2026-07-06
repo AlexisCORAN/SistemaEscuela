@@ -1,8 +1,6 @@
 package alumnos.view;
 import alumnos.controller.AlumnoController;
 import alumnos.model.Alumno;
-import alumnos.model.Apoderado;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
@@ -37,8 +35,14 @@ public class PanelAlumnos extends javax.swing.JPanel {
         }
     }
 
-    private void recargarDatos() {
-        refrescarTabla(alumnoController.obtenerAlumnos());
+    public void recargarDatos() {
+        if (alumnoController == null) return;
+
+        String seleccionActual = (String) cboEstado.getSelectedItem();
+
+        List<Alumno> datosActualizados = alumnoController.obtenerAlumnosPorEstado(seleccionActual);
+
+        refrescarTabla(datosActualizados);
     }
 
     public void refrescarTabla(List<Alumno> alumnos) {
@@ -76,9 +80,11 @@ public class PanelAlumnos extends javax.swing.JPanel {
         panelNombre = new javax.swing.JPanel();
         nombrePanel = new javax.swing.JLabel();
         filler4 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 50), new java.awt.Dimension(0, 50), new java.awt.Dimension(32767, 32767));
-        panelAgregar = new javax.swing.JPanel();
+        panelAccionesAlumno = new javax.swing.JPanel();
         filler6 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
-        btnBajaAlumno = new javax.swing.JButton();
+        btnEstadoAlumno = new javax.swing.JButton();
+        filler8 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
+        btnEdicionAlumno = new javax.swing.JButton();
         filler7 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
         btnNuevo = new javax.swing.JButton();
         filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15));
@@ -117,26 +123,40 @@ public class PanelAlumnos extends javax.swing.JPanel {
         panelSuperior.add(panelNombre);
         panelSuperior.add(filler4);
 
-        panelAgregar.setMaximumSize(new java.awt.Dimension(32767, 35));
-        panelAgregar.setMinimumSize(new java.awt.Dimension(400, 35));
-        panelAgregar.setOpaque(false);
-        panelAgregar.setPreferredSize(new java.awt.Dimension(32767, 35));
-        panelAgregar.setLayout(new javax.swing.BoxLayout(panelAgregar, javax.swing.BoxLayout.X_AXIS));
-        panelAgregar.add(filler6);
+        panelAccionesAlumno.setMaximumSize(new java.awt.Dimension(32767, 35));
+        panelAccionesAlumno.setMinimumSize(new java.awt.Dimension(400, 35));
+        panelAccionesAlumno.setOpaque(false);
+        panelAccionesAlumno.setPreferredSize(new java.awt.Dimension(32767, 35));
+        panelAccionesAlumno.setLayout(new javax.swing.BoxLayout(panelAccionesAlumno, javax.swing.BoxLayout.X_AXIS));
+        panelAccionesAlumno.add(filler6);
 
-        btnBajaAlumno.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        btnBajaAlumno.setText("Dar baja Alumno");
-        btnBajaAlumno.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnBajaAlumno.setMaximumSize(new java.awt.Dimension(140, 35));
-        btnBajaAlumno.setMinimumSize(new java.awt.Dimension(140, 35));
-        btnBajaAlumno.setPreferredSize(new java.awt.Dimension(140, 35));
-        btnBajaAlumno.addActionListener(new java.awt.event.ActionListener() {
+        btnEstadoAlumno.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        btnEstadoAlumno.setText("Dar baja Alumno");
+        btnEstadoAlumno.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnEstadoAlumno.setMaximumSize(new java.awt.Dimension(140, 35));
+        btnEstadoAlumno.setMinimumSize(new java.awt.Dimension(140, 35));
+        btnEstadoAlumno.setPreferredSize(new java.awt.Dimension(140, 35));
+        btnEstadoAlumno.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBajaAlumnoActionPerformed(evt);
+                btnEstadoAlumnoActionPerformed(evt);
             }
         });
-        panelAgregar.add(btnBajaAlumno);
-        panelAgregar.add(filler7);
+        panelAccionesAlumno.add(btnEstadoAlumno);
+        panelAccionesAlumno.add(filler8);
+
+        btnEdicionAlumno.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        btnEdicionAlumno.setText("Editar Alumno");
+        btnEdicionAlumno.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnEdicionAlumno.setMaximumSize(new java.awt.Dimension(140, 35));
+        btnEdicionAlumno.setMinimumSize(new java.awt.Dimension(140, 35));
+        btnEdicionAlumno.setPreferredSize(new java.awt.Dimension(140, 35));
+        btnEdicionAlumno.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEdicionAlumnoActionPerformed(evt);
+            }
+        });
+        panelAccionesAlumno.add(btnEdicionAlumno);
+        panelAccionesAlumno.add(filler7);
 
         btnNuevo.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         btnNuevo.setText("Nuevo Alumno");
@@ -149,9 +169,9 @@ public class PanelAlumnos extends javax.swing.JPanel {
                 btnNuevoActionPerformed(evt);
             }
         });
-        panelAgregar.add(btnNuevo);
+        panelAccionesAlumno.add(btnNuevo);
 
-        panelSuperior.add(panelAgregar);
+        panelSuperior.add(panelAccionesAlumno);
         panelSuperior.add(filler3);
 
         panelBusqueda.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
@@ -300,11 +320,11 @@ public class PanelAlumnos extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNuevoActionPerformed
-      java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
-        if (parentWindow instanceof java.awt.Frame frame) {
-            DialogNuevoAlumno dialog = new DialogNuevoAlumno(frame, true, alumnoController, this, null);
-            dialog.setVisible(true);
-        }
+    java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
+    if (parentWindow instanceof main.VentanaPrincipal main) {
+        DialogNuevoAlumno dialog = new DialogNuevoAlumno(main, true, alumnoController, main, null);
+        dialog.setVisible(true);
+    }
     }//GEN-LAST:event_btnNuevoActionPerformed
 
     private void txtBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBuscarActionPerformed
@@ -316,21 +336,13 @@ public class PanelAlumnos extends javax.swing.JPanel {
     }//GEN-LAST:event_btnBuscarActionPerformed
 
     private void tablaAlumnosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablaAlumnosMouseClicked
-        if (evt.getClickCount() == 2) { 
-            int filaSeleccionada = tablaAlumnos.getSelectedRow();
-
-            if (filaSeleccionada >= 0) {
-                String codigoFila = (String) tablaAlumnos.getValueAt(filaSeleccionada, 0);
-
-                Alumno alumnoParaEditar = alumnoController.obtenerAlumnoParaEdicion(codigoFila);
-
-                if (alumnoParaEditar != null) {
-                    java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
-                    if (parentWindow instanceof java.awt.Frame frame) {
-                        DialogNuevoAlumno dialog = new DialogNuevoAlumno(frame, true, alumnoController, this, alumnoParaEditar);
-                        dialog.setVisible(true);
-                    }
-                }
+        int fila = tablaAlumnos.getSelectedRow();
+        if (fila != -1) {
+            String estado = (String) tablaAlumnos.getValueAt(fila, 6);
+            if (estado.equals("ACTIVO")) {
+                btnEstadoAlumno.setText("Dar de Baja");
+            } else {
+                btnEstadoAlumno.setText("Reactivar Alumno");
             }
         }
     }//GEN-LAST:event_tablaAlumnosMouseClicked
@@ -345,40 +357,65 @@ public class PanelAlumnos extends javax.swing.JPanel {
         refrescarTabla(resultadosFiltrados);
     }//GEN-LAST:event_cboEstadoActionPerformed
 
-    private void btnBajaAlumnoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBajaAlumnoActionPerformed
+    private void btnEstadoAlumnoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEstadoAlumnoActionPerformed
     int filaSeleccionada = tablaAlumnos.getSelectedRow();
-
     if (filaSeleccionada == -1) {
         mostrarError("Por favor, seleccione un alumno de la tabla.");
         return;
     }
 
-    
     String codigo = (String) tablaAlumnos.getValueAt(filaSeleccionada, 0);
+    String estadoActual = (String) tablaAlumnos.getValueAt(filaSeleccionada, 6);
     
-    Alumno alumnoParaBaja = alumnosCargados.stream()
-            .filter(a -> a.getCodigoEstudiante().equals(codigo))
-            .findFirst()
-            .orElse(null);
-
-    if (alumnoParaBaja == null) return;
+    boolean esReactivacion = estadoActual.equals("RETIRADO");
+    String accion = esReactivacion ? "reactivar" : "dar de baja";
+    String titulo = esReactivacion ? "Confirmar Reactivación" : "Confirmar Baja";
 
     int confirmacion = javax.swing.JOptionPane.showConfirmDialog(this, 
-            "¿Está seguro de dar de baja al alumno " + alumnoParaBaja.getNombreCompleto() + "?", 
-            "Confirmar Baja", 
-            javax.swing.JOptionPane.YES_NO_OPTION);
+            "¿Está seguro de que desea " + accion + " al alumno " + codigo + "?", 
+            titulo, javax.swing.JOptionPane.YES_NO_OPTION);
 
     if (confirmacion == javax.swing.JOptionPane.YES_OPTION) {
-        boolean resultado = alumnoController.procesarBajaAlumno(alumnoParaBaja);
-
-        if (resultado) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Alumno dado de baja correctamente.");
-            refrescarTabla(alumnoController.obtenerAlumnos());
+        
+        String error = null;
+        if (esReactivacion) {
+            error = alumnoController.procesarReactivacionPorCodigo(codigo);
         } else {
-            mostrarError("No se pudo procesar la baja. Intente nuevamente.");
+            error = alumnoController.procesarBajaPorCodigo(codigo);
+        }
+
+        if (error == null) {
+            String mensajeExito = esReactivacion ? "Alumno reactivado correctamente." : "Alumno dado de baja correctamente.";
+            javax.swing.JOptionPane.showMessageDialog(this, mensajeExito);
+            refrescarTabla(alumnoController.obtenerAlumnos());
+            
+        } else {
+            mostrarError(error);
         }
     }
-    }//GEN-LAST:event_btnBajaAlumnoActionPerformed
+    }//GEN-LAST:event_btnEstadoAlumnoActionPerformed
+
+    private void btnEdicionAlumnoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEdicionAlumnoActionPerformed
+    int fila = tablaAlumnos.getSelectedRow();
+    
+    if (fila == -1) {
+        mostrarError("Por favor, seleccione un alumno de la tabla para editar.");
+        return;
+    }
+
+    String codigo = (String) tablaAlumnos.getValueAt(fila, 0);
+    Alumno alumnoParaEditar = alumnoController.obtenerAlumnoParaEdicion(codigo);
+
+    if (alumnoParaEditar != null) {
+        java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
+        if (parentWindow instanceof main.VentanaPrincipal main) {
+            DialogNuevoAlumno dialog = new DialogNuevoAlumno(main, true, alumnoController, main, alumnoParaEditar);
+            dialog.setVisible(true);
+        }
+    } else {
+        mostrarError("No se pudieron cargar los datos del alumno. Inténtelo de nuevo.");
+    }
+    }//GEN-LAST:event_btnEdicionAlumnoActionPerformed
 
     public void mostrarError(String mensaje) {
         javax.swing.JOptionPane.showMessageDialog(this, mensaje, "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
@@ -386,10 +423,10 @@ public class PanelAlumnos extends javax.swing.JPanel {
     
     private void ejecutarBusqueda() {
         String codigoBusqueda = txtBuscar.getText().trim();
-        List<Alumno> resultados = alumnoController.buscarPorCodigo(codigoBusqueda);
-        
+        List<Alumno> resultados = alumnoController.buscarAlumnosPorCodigoBusqueda(codigoBusqueda);
+
         if (resultados.isEmpty() && !codigoBusqueda.isEmpty() && !codigoBusqueda.equals("Buscar por Código")) {
-            refrescarTabla(Collections.emptyList());
+            refrescarTabla(java.util.Collections.emptyList());
             mostrarError("No se encontró ningún estudiante con el código: " + codigoBusqueda);
         } else {
             refrescarTabla(resultados);
@@ -397,8 +434,9 @@ public class PanelAlumnos extends javax.swing.JPanel {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnBajaAlumno;
     private javax.swing.JButton btnBuscar;
+    private javax.swing.JButton btnEdicionAlumno;
+    private javax.swing.JButton btnEstadoAlumno;
     private javax.swing.JButton btnNuevo;
     private javax.swing.JComboBox<String> cboEstado;
     private javax.swing.Box.Filler filler1;
@@ -408,9 +446,10 @@ public class PanelAlumnos extends javax.swing.JPanel {
     private javax.swing.Box.Filler filler5;
     private javax.swing.Box.Filler filler6;
     private javax.swing.Box.Filler filler7;
+    private javax.swing.Box.Filler filler8;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel nombrePanel;
-    private javax.swing.JPanel panelAgregar;
+    private javax.swing.JPanel panelAccionesAlumno;
     private javax.swing.JPanel panelBusqueda;
     private javax.swing.JPanel panelCentral;
     private javax.swing.JPanel panelInferior;

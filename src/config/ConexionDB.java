@@ -12,11 +12,10 @@ import javax.swing.JOptionPane;
  * @author Alexis
  */
 public class ConexionDB {
-    
+
     private static ConexionDB instancia;
-    private Connection conexion;
     private static boolean alertaMostrada = false;
-    
+
     private final String url = "jdbc:sqlserver://localhost:1433;"
                              + "databaseName=ColegioDB;"
                              + "user=sa;"
@@ -26,46 +25,35 @@ public class ConexionDB {
 
     private ConexionDB() {
         try {
-            this.conexion = DriverManager.getConnection(url);
-            System.out.println("¡Conexión exitosa a ColegioDB en Docker!");
-            alertaMostrada = false; 
-            
-        } catch (SQLException e) {
-            this.conexion = null;
-
-            if (!alertaMostrada) {
-                alertaMostrada = true; // Marcamos que ya se mostró una vez
-                
-                JOptionPane.showMessageDialog(null, """
-                                                    No se pudo conectar a la base de datos SQL Server.
-                                                    El programa iniciara en el modo desconectado (ciertas funciones no estaran disponibles).              
-                                                   """, 
-                    "Error de Conexión", 
-                    JOptionPane.WARNING_MESSAGE
-                );
-            }
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        } catch (ClassNotFoundException e) {
+            System.err.println("Error: Driver de SQL Server no encontrado.");
         }
     }
 
     public static synchronized ConexionDB getInstance() {
-        if (instancia == null || estaDesconectado()) {
+        if (instancia == null) {
             instancia = new ConexionDB();
         }
         return instancia;
     }
 
-    private static boolean estaDesconectado() {
-        if (instancia == null) {
-            return true;
-        }
-        try {
-            return instancia.conexion == null || instancia.conexion.isClosed();
-        } catch (SQLException e) {
-            return true;
-        }
-    }
 
-    public Connection getConexion() {
-        return conexion;
+    public Connection getConexion() throws SQLException {
+        try {
+            Connection conn = DriverManager.getConnection(url);
+            alertaMostrada = false; 
+            return conn;
+        } catch (SQLException e) {
+            if (!alertaMostrada) {
+                alertaMostrada = true;
+                JOptionPane.showMessageDialog(null, """
+                                                    No se pudo conectar a la base de datos SQL Server.
+                                                    El programa no podrá guardar cambios.""", 
+                    "Error de Conexión", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+            throw e; 
+        }
     }
 }

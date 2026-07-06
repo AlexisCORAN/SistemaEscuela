@@ -38,7 +38,7 @@ public final class TransactionRunner {
             rollback(conn);
             return valorSiFalla;
         } finally {
-            restaurarAutoCommit(conn);
+            cerrarConexion(conn);
         }
     }
 
@@ -47,8 +47,14 @@ public final class TransactionRunner {
         catch (SQLException ex) { System.err.println("Error en rollback: " + ex.getMessage()); }
     }
 
-    private static void restaurarAutoCommit(Connection conn) {
-        try { if (conn != null) conn.setAutoCommit(true); }
-        catch (SQLException ex) { System.err.println("Error restaurando autocommit: " + ex.getMessage()); }
+    private static void cerrarConexion(Connection conn) {
+        if (conn != null) {
+            try {
+                conn.setAutoCommit(true);
+                conn.close(); 
+            } catch (SQLException ex) {
+                System.err.println("Error cerrando la conexión: " + ex.getMessage());
+            }
+        }
     }
 }

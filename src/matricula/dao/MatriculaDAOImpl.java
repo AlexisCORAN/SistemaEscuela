@@ -24,7 +24,7 @@ public class MatriculaDAOImpl implements IMatriculaDAO {
     private final Connection conexion;
 
     private static final String SELECT_MATRICULA_BASE = 
-        "SELECT M.idMatricula, M.codigoMatricula, M.fechaMatricula, M.añoEscolar AS anioEscolar, M.estado AS estadoCabecera, " +
+        "SELECT M.idMatricula, M.codigoMatricula, M.fechaMatricula, M.anioEscolar AS anioEscolar, M.estado AS estadoCabecera, " +
         "A.idAlumno, A.dni AS alumnoDni, A.nombres AS alumnoNombres, A.apellidos AS alumnoApellidos, A.codigoEstudiante AS alumnoCodigoEstudiante, " +
         "G.idGrado, G.nombre AS gradoNombre, G.nivel AS gradoNivel " +
         "FROM Matricula M " +

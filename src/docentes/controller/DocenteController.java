@@ -3,13 +3,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package docentes.controller;
-import java.sql.Connection;
 import java.util.List;
-import java.util.Collections;
-import docentes.dao.IDocenteDAO;
-import docentes.dao.DocenteDAOImpl;
 import docentes.model.Docente;
-import config.ConexionDB;
+import docentes.service.DocenteService;
 /**
  *
  * @author Alexis
@@ -17,87 +13,84 @@ import config.ConexionDB;
 
 public class DocenteController {
 
+    private final DocenteService docenteService;
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(DocenteController.class.getName());
+
     public DocenteController() {
+        this.docenteService = new DocenteService();
     }
 
     public List<Docente> obtenerDocentes() {
+        return docenteService.obtenerDocentes();
+    }
+    
+    public List<Docente> obtenerDocentesPorEstado(String filtroEstado) {
+        return docenteService.obtenerDocentesPorEstado(filtroEstado);
+    }
+
+    public String registrarDocente(Docente docente) {        
         try {
-            final Connection conn = ConexionDB.getInstance().getConexion();
-            final IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
-            return docenteDAO.listarTodos();
-        } catch (final Exception e) {
-            System.err.println("Error al obtener docentes: " + e.getMessage());
-            return Collections.emptyList();
+            docenteService.registrarDocente(docente);
+            return null;
+        } catch (IllegalArgumentException e) {
+            return e.getMessage();
+        } catch (RuntimeException e) {
+            return "Ocurrió un error en la base de datos: " + e.getMessage();
         }
     }
 
-    public List<Docente> buscarPorCodigo(final String codigo) {
-        if (codigo == null || codigo.trim().isEmpty() || codigo.equals("Buscar por Código")) {
-            return obtenerDocentes();
+    public String actualizarDocente(Docente docente) {
+        
+         try {
+            docenteService.actualizarDocente(docente);
+            return null;
+        } catch (IllegalArgumentException e) {
+            return e.getMessage();
+        } catch (RuntimeException e) {
+            return "Ocurrió un error en la base de datos: " + e.getMessage();
         }
+    }
+    
+    public String procesarBajaPorCodigo(String codigo) {
         try {
-            final Connection conn = ConexionDB.getInstance().getConexion();
-            final IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
-            final Docente doc = docenteDAO.buscarPorCodigo(codigo.trim());
-            return doc != null ? List.of(doc) : Collections.emptyList();
-        } catch (final Exception e) {
-            System.err.println("Error al buscar docente: " + e.getMessage());
-            return Collections.emptyList();
+            docenteService.procesarBajaPorCodigo(codigo);
+            return null; 
+        } catch (IllegalArgumentException e) {
+            return e.getMessage(); 
+        } catch (RuntimeException e) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al dar de baja al docente con código " + codigo, e);
+            return "Error del sistema: " + e.getMessage();
         }
     }
 
-    public boolean registrarDocente(final Docente docente) {
+    public String procesarReactivacionPorCodigo(String codigo) {
         try {
-            if (docente.getDni().length() != 8) {
-                throw new IllegalArgumentException("El DNI debe tener exactamente 8 dígitos.");
-            }
-            
-            final Connection conn = ConexionDB.getInstance().getConexion();
-            final IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
-            
-            final String ultimoCod = docenteDAO.obtenerUltimoCodigo();
-            int correlativo = 1;
-            if (ultimoCod != null && ultimoCod.contains("-")) {
-                final String[] partes = ultimoCod.split("-");
-                if (partes.length == 3) {
-                    correlativo = Integer.parseInt(partes[2]) + 1;
-                }
-            }
-
-            docente.generarCodigoDocente(correlativo);
-            docente.setActivo(true);
-            
-            return docenteDAO.insertar(docente);
-        } catch (final Exception e) {
-            System.err.println("Error al registrar docente: " + e.getMessage());
-            return false;
+            docenteService.procesarReactivacionPorCodigo(codigo);
+            return null; 
+        } catch (IllegalArgumentException e) {
+            return e.getMessage(); 
+        } catch (RuntimeException e) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al reactivar al docente con código " + codigo, e);
+            return "Error del sistema: " + e.getMessage();
         }
     }
+    
+    public Docente obtenerDocenteParaEdicion(String codigoDocente) {
+        Docente original = docenteService.buscarDocentePorCodigoExacto(codigoDocente);
+        return crearCopiaDocente(original);
 
-    public boolean actualizarDocente(final Docente docente) {
-        try {
-            if (docente.getDni().length() != 8) {
-                throw new IllegalArgumentException("El DNI debe tener exactamente 8 dígitos.");
-            }
-            final Connection conn = ConexionDB.getInstance().getConexion();
-            final IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
-            return docenteDAO.actualizar(docente);
-        } catch (final Exception e) {
-            System.err.println("Error al actualizar docente: " + e.getMessage());
-            return false;
-        }
     }
 
-    public boolean procesarBajaDocente(final Docente docente) {
-        if (docente == null) return false;
-        try {
-                final Connection conn = ConexionDB.getInstance().getConexion();
-                final IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
-                docente.setActivo(false);
-                return docenteDAO.actualizar(docente);
-        } catch (final Exception e) {
-            System.err.println("Error al procesar baja: " + e.getMessage());
-            return false;
-        }
+    private Docente crearCopiaDocente(Docente original) {
+        return (original != null) ? new Docente(original) : null;
     }
+    
+     public List<Docente> buscarDocentesPorCodigoBusqueda(String codigo) {
+        Docente docente = docenteService.buscarDocentePorCodigoExacto(codigo);
+        if (docente != null) {
+            return java.util.Collections.singletonList(docente);
+        }
+        return java.util.Collections.emptyList();
+    }
+
 }

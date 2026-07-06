@@ -10,6 +10,7 @@ import javax.swing.table.DefaultTableModel;
 import notas.controller.RegistroBimestralController;
 import notas.model.Evaluacion;
 import notas.model.RegistroBimestral;
+import plan_estudios.controller.PlanEstudiosController;
 import plan_estudios.model.Curso;
 import plan_estudios.model.Grado;
 
@@ -51,7 +52,7 @@ public class PanelNotas extends javax.swing.JPanel {
         cboGrado.addItem("-- Seleccione Grado --");
         this.gradosCargados.clear();
         try {
-            plan_estudios.controller.GradoController gradoController = new plan_estudios.controller.GradoController();
+            plan_estudios.controller.PlanEstudiosController gradoController = new plan_estudios.controller.PlanEstudiosController();
             List<Grado> activos = gradoController.obtenerGradosActivos();
             for (Grado g : activos) {
                 this.gradosCargados.add(g);
@@ -73,7 +74,7 @@ public class PanelNotas extends javax.swing.JPanel {
         cboBimestre.setEnabled(true);
 
         try {
-            plan_estudios.controller.CursoController cursoController = new plan_estudios.controller.CursoController();
+            PlanEstudiosController cursoController = new PlanEstudiosController();
             List<Curso> todos = cursoController.obtenerCursos();
             for (Curso c : todos) {
                 if (c.getGradoAsignado() != null && c.getGradoAsignado().getId() == idGrado) {
