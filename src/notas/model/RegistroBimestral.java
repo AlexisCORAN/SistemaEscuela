@@ -36,9 +36,21 @@ public class RegistroBimestral {
         this.fechaCierre = fechaCierre;
         this.evaluaciones = (evaluaciones != null) ? evaluaciones : new ArrayList<>();
     }
+    
+    public RegistroBimestral(RegistroBimestral otroRegistroBimestral) {
+        this.id = otroRegistroBimestral.id;
+        this.matriculaCurso = otroRegistroBimestral.matriculaCurso;
+        this.bimestre = otroRegistroBimestral.bimestre;
+        this.activo = otroRegistroBimestral.activo;
+        this.fechaCierre = otroRegistroBimestral.fechaCierre;
+        this.evaluaciones = new ArrayList<>();
+        for (Evaluacion e : otroRegistroBimestral.evaluaciones) {
+            this.evaluaciones.add(new Evaluacion(e));
+        }
+    }
 
     private Integer validarIdRegistro(Integer nuevoId, Integer idActual) {
-        if (nuevoId != null && nuevoId <= 0) {
+        if (nuevoId != null && nuevoId < 0) {
             throw new IllegalArgumentException("El ID del registro debe ser positivo.");
         }
         if (idActual != null && !idActual.equals(nuevoId)) {
@@ -113,24 +125,48 @@ public class RegistroBimestral {
             }
         }
     }
+    
+    public double obtenerNotaConsolidadaPorTipo(TipoEvaluacion tipo, List<Evaluacion> evaluacionesExternas) {
+        if (evaluacionesExternas == null || evaluacionesExternas.isEmpty()) return 0.0;
 
-    public double calcularPromedio() {
-        double total = 0.0;
-        for (Evaluacion e : evaluaciones) {
-            if (e.getNota() != null && e.getTipo() != null) {
-                total += e.getNota() * e.getTipo().getPeso();
+        List<Evaluacion> filtradas = new ArrayList<>();
+        for (Evaluacion e : evaluacionesExternas) {
+            if (e.getTipo() == tipo && e.getNota() != null) {
+                filtradas.add(e);
             }
         }
-        return Math.round(total * 100.0) / 100.0;
-    }
 
-    public static double calcularPromedioEstatico(double practica, double tarea, double parcial, double bimestral) {
-        double total = (practica * TipoEvaluacion.PRACTICA.getPeso()) + 
-                       (tarea * TipoEvaluacion.TAREA.getPeso()) + 
-                       (parcial * TipoEvaluacion.PARCIAL.getPeso()) + 
-                       (bimestral * TipoEvaluacion.BIMESTRAL.getPeso());
+        if (filtradas.isEmpty()) return 0.0;
+
+        if (tipo == TipoEvaluacion.PARCIAL || tipo == TipoEvaluacion.BIMESTRAL) {
+            double max = 0.0;
+            for (Evaluacion e : filtradas) {
+                if (e.getNota() > max) max = e.getNota();
+            }
+            return max;
+        }
+
+        double suma = 0.0;
+        for (Evaluacion e : filtradas) {
+            suma += e.getNota();
+        }
+        return Math.round((suma / filtradas.size()) * 100.0) / 100.0;
+    }
+    
+    public double calcularPromedio(List<Evaluacion> evaluacionesExternas) {
+        double promPractica = obtenerNotaConsolidadaPorTipo(TipoEvaluacion.PRACTICA, evaluacionesExternas);
+        double promTarea = obtenerNotaConsolidadaPorTipo(TipoEvaluacion.TAREA, evaluacionesExternas);
+        double notaParcial = obtenerNotaConsolidadaPorTipo(TipoEvaluacion.PARCIAL, evaluacionesExternas);
+        double notaBimestral = obtenerNotaConsolidadaPorTipo(TipoEvaluacion.BIMESTRAL, evaluacionesExternas);
+
+        double total = (promPractica * TipoEvaluacion.PRACTICA.getPeso()) + 
+                       (promTarea * TipoEvaluacion.TAREA.getPeso()) + 
+                       (notaParcial * TipoEvaluacion.PARCIAL.getPeso()) + 
+                       (notaBimestral * TipoEvaluacion.BIMESTRAL.getPeso());
+
         return Math.round(total * 100.0) / 100.0;
     }
+    
     
     public void validarNuevaEvaluacion(TipoEvaluacion tipo) {
         long contador = this.evaluaciones.stream().filter(e -> e.getTipo() == tipo).count();

@@ -77,4 +77,5 @@ public class GradoDAOImpl implements IGradoDAO {
         final String sql = "SELECT idGrado, nombre, nivel, estado FROM Grado WHERE nivel = ?";
         return JdbcTemplate.query(conexion, sql, RowMappers.GRADO_ROW_MAPPER, nivel);
     }
+    
 }

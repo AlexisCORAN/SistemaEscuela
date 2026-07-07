@@ -9,20 +9,21 @@ import main.VentanaPrincipal;
 import alumnos.controller.AlumnoController;
 import alumnos.model.Alumno;
 import alumnos.model.Apoderado;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import shared.IDataListener;
 
 /**
  *
  * @author Alexis
  */
 public class DialogNuevoAlumno extends javax.swing.JDialog {
-    
+     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(DialogNuevoAlumno.class.getName());
     private final AlumnoController alumnoController;
-    private final PanelAlumnos panelPadre;
     private final Alumno alumnoEdicion;
+    private final IDataListener listener;
+    
     /**
      * Creates new form DialogNuevoAlumno
      * @param parent
@@ -31,10 +32,11 @@ public class DialogNuevoAlumno extends javax.swing.JDialog {
      * @param panelPadre
      * @param alumnoEdicion
      */
-    public DialogNuevoAlumno(java.awt.Frame parent, boolean modal, AlumnoController alumnoController, PanelAlumnos panelPadre, Alumno alumnoEdicion) {
+    public DialogNuevoAlumno(java.awt.Frame parent, boolean modal, AlumnoController alumnoController, 
+                             IDataListener listener, Alumno alumnoEdicion) { 
         super(parent, modal);
         this.alumnoController = alumnoController;
-        this.panelPadre = panelPadre;
+        this.listener = listener;
         this.alumnoEdicion = alumnoEdicion;
         
         initComponents(); 
@@ -48,30 +50,34 @@ public class DialogNuevoAlumno extends javax.swing.JDialog {
     
     private void cargarDatosEnFormulario() {
         nombrePanel.setText("Modificar Información de Alumno");
-        txtDniAlumno.setText(alumnoEdicion.getDni());
-        txtDniAlumno.setEditable(false); 
-        txtNombresAlumno.setText(alumnoEdicion.getNombres());
-        txtApellidosAlumno.setText(alumnoEdicion.getApellidos());
-        
-        if (alumnoEdicion.getFechaNacimiento() != null) {
-            spinFechaNacimiento.setValue(Date.from(alumnoEdicion.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-        }
-        
-        if (alumnoEdicion.getApoderado() != null) {
-            Apoderado ap = alumnoEdicion.getApoderado();
-            txtDniApoderado.setText(ap.getDni());
-            txtNombresApoderado.setText(ap.getNombres());
-            txtApellidosApoderado.setText(ap.getApellidos());
-            txtParentesco.setText(ap.getParentesco());
-            txtTelefonoApoderado.setText(ap.getTelefono());
-            txtCorreoApoderado.setText(ap.getCorreo());
-            if (ap.getFechaNacimiento() != null) {
-                spinFechaNacimiento1.setValue(Date.from(ap.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-            }
+        cargarDatosAlumno(alumnoEdicion);
+        cargarDatosApoderado(alumnoEdicion.getApoderado());
+    }
+
+    private void cargarDatosAlumno(Alumno alumno) {
+        txtDniAlumno.setText(alumno.getDni());
+        txtDniAlumno.setEditable(false);
+        txtNombresAlumno.setText(alumno.getNombres());
+        txtApellidosAlumno.setText(alumno.getApellidos());
+        if (alumno.getFechaNacimiento() != null) {
+            spinFechaNacimiento.setValue(Date.from(alumno.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()));
         }
     }
 
-    
+    private void cargarDatosApoderado(Apoderado ap) {
+        if (ap == null) return;
+        txtDniApoderado.setText(ap.getDni());
+        txtNombresApoderado.setText(ap.getNombres());
+        txtApellidosApoderado.setText(ap.getApellidos());
+        txtParentesco.setText(ap.getParentesco());
+        txtTelefonoApoderado.setText(ap.getTelefono());
+        txtCorreoApoderado.setText(ap.getCorreo());
+        if (ap.getFechaNacimiento() != null) {
+            spinFechaNacimiento1.setValue(Date.from(ap.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        }
+    }
+
+ 
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -486,52 +492,88 @@ public class DialogNuevoAlumno extends javax.swing.JDialog {
     }//GEN-LAST:event_txtNombresApoderadoActionPerformed
 
     private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
+
+        Alumno alumno;
         try {
-            boolean exito;
-
-            java.util.Date fechaNacAlumno = (java.util.Date) spinFechaNacimiento.getValue();
-            String dniAlumno = txtDniAlumno.getText().trim();
-            String nombresAlumno = txtNombresAlumno.getText().trim();
-            String apellidosAlumno = txtApellidosAlumno.getText().trim();
-
-            java.util.Date fechaNacApoderado = (java.util.Date) spinFechaNacimiento1.getValue();
-            String dniApoderado = txtDniApoderado.getText().trim();
-            String nombresApoderado = txtNombresApoderado.getText().trim();
-            String apellidosApoderado = txtApellidosApoderado.getText().trim();
-            String parentesco = txtParentesco.getText().trim();
-            String telefono = txtTelefonoApoderado.getText().trim();
-            String correo = txtCorreoApoderado.getText().trim();
-
-            if (alumnoEdicion != null) {
-                exito = alumnoController.modificarAlumnoDesdeFormulario(
-                    alumnoEdicion.getId(), alumnoEdicion.getCodigoEstudiante(), alumnoEdicion.isActivo(),
-                    fechaNacAlumno, dniAlumno, nombresAlumno, apellidosAlumno,
-                    alumnoEdicion.getApoderado().getId(), alumnoEdicion.getApoderado().isActivo(),
-                    fechaNacApoderado, dniApoderado, nombresApoderado, apellidosApoderado,
-                    parentesco, telefono, correo
-                );
-            } else {
-                exito = alumnoController.registrarAlumnoDesdeFormulario(
-                    fechaNacAlumno, dniAlumno, nombresAlumno, apellidosAlumno,
-                    fechaNacApoderado, dniApoderado, nombresApoderado, apellidosApoderado,
-                    parentesco, telefono, correo
-                );
-            }
-
-            if (exito) {
-                if (panelPadre != null) panelPadre.refrescarTabla(alumnoController.obtenerAlumnos());
-                this.dispose();
-            } else {
-                mostrarMensajeValidacion("Hubo un error de persistencia. Revise la conexión.");
-            }
+            alumno = (alumnoEdicion != null)
+                ? actualizarAlumnoDesdeFormulario()
+                : obtenerAlumnoDesdeFormulario();
         } catch (IllegalArgumentException | IllegalStateException e) {
             mostrarMensajeValidacion(e.getMessage());
-        } catch (RuntimeException e) {
-            logger.log(java.util.logging.Level.SEVERE, "Error crítico de sistema al guardar", e);
-            mostrarMensajeValidacion("Ocurrió un error inesperado de sistema. Consulte con soporte.");
+            return;
         }
+
+        String error = (alumnoEdicion != null)
+            ? alumnoController.actualizarAlumno(alumno)
+            : alumnoController.registrarAlumno(alumno);
+
+        if (error == null) {
+            if (listener != null) {
+                listener.onDataChanged(); 
+            }
+            this.dispose();
+        } else {
+            mostrarMensajeValidacion(error);
+        }
+ 
     }//GEN-LAST:event_btnGuardarActionPerformed
     
+    
+    private Alumno obtenerAlumnoDesdeFormulario() {
+        java.time.LocalDate nacAlumno = ((java.util.Date) spinFechaNacimiento.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        java.time.LocalDate nacApoderado = ((java.util.Date) spinFechaNacimiento1.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        Apoderado apoderado = new Apoderado(
+            txtParentesco.getText().trim(), 
+            txtTelefonoApoderado.getText().trim(), 
+            txtCorreoApoderado.getText().trim(), 
+            null,
+            txtDniApoderado.getText().trim(), 
+            txtNombresApoderado.getText().trim(), 
+            txtApellidosApoderado.getText().trim(), 
+            nacApoderado, 
+            true  
+        );
+
+        return new Alumno(
+            "TEMP", 
+            apoderado, 
+            null, 
+            txtDniAlumno.getText().trim(), 
+            txtNombresAlumno.getText().trim(), 
+            txtApellidosAlumno.getText().trim(), 
+            nacAlumno, 
+            true
+        );
+    }
+
+    private Alumno actualizarAlumnoDesdeFormulario() {
+        java.time.LocalDate nacAlumno = ((java.util.Date) spinFechaNacimiento.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        java.time.LocalDate nacApoderado = ((java.util.Date) spinFechaNacimiento1.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        Apoderado apMod = new Apoderado(
+            txtParentesco.getText().trim(), 
+            txtTelefonoApoderado.getText().trim(), 
+            txtCorreoApoderado.getText().trim(), 
+            alumnoEdicion.getApoderado().getId(), 
+            txtDniApoderado.getText().trim(), 
+            txtNombresApoderado.getText().trim(), 
+            txtApellidosApoderado.getText().trim(), 
+            nacApoderado, 
+            alumnoEdicion.getApoderado().isActivo()
+        );
+
+        return new Alumno(
+            alumnoEdicion.getCodigoEstudiante(),
+            apMod, 
+            alumnoEdicion.getId(),   
+            txtDniAlumno.getText().trim(), 
+            txtNombresAlumno.getText().trim(), 
+            txtApellidosAlumno.getText().trim(), 
+            nacAlumno, 
+            alumnoEdicion.isActivo()
+        );
+    }
     
     public void mostrarMensajeValidacion(String mensaje) {
         javax.swing.JOptionPane.showMessageDialog(this, mensaje, "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
@@ -551,6 +593,8 @@ public class DialogNuevoAlumno extends javax.swing.JDialog {
         
         java.awt.EventQueue.invokeLater(() -> new VentanaPrincipal().setVisible(true));
     }
+    
+    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCancelar;

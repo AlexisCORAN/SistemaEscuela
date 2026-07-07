@@ -43,6 +43,15 @@ public class PanelMatricula extends javax.swing.JPanel {
             dialog.setVisible(true);
         }   
     }
+    
+    public void recargarDatos() {
+        if (matriculaController == null) return;
+
+        String seleccionActual = (String) cboEstado.getSelectedItem();
+        List<Matricula> datosActualizados = matriculaController.obtenerMatriculasPorEstado(seleccionActual);
+
+        refrescarTabla(datosActualizados);
+    }
 
     public void refrescarTabla(List<Matricula> matriculas) {
         this.matriculasCargadas = matriculas; 
@@ -54,7 +63,7 @@ public class PanelMatricula extends javax.swing.JPanel {
                 m.getCodigoMatricula(),
                 m.getAlumno() != null ? m.getAlumno().getDni() : "S/D",
                 m.getAlumno() != null ? m.getAlumno().getNombreCompleto() : "S/D",
-                m.getAñoEscolar(),
+                m.getAnioEscolar(),
                 m.getGrado() != null ? m.getGrado().getNombre() + " - " + m.getGrado().getNivel() : "No asignado",
                 m.getFechaMatricula().toString(),
                 m.getActivo() ? "ACTIVA" : "ANULADA"
@@ -77,14 +86,18 @@ public class PanelMatricula extends javax.swing.JPanel {
         panelNombre = new javax.swing.JPanel();
         nombrePanel = new javax.swing.JLabel();
         filler4 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 50), new java.awt.Dimension(0, 50), new java.awt.Dimension(32767, 32767));
-        panelAgregar = new javax.swing.JPanel();
+        panelAccionesMatricula = new javax.swing.JPanel();
         filler5 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
-        btnAnularMatricula = new javax.swing.JButton();
+        btnEstadoMatricula = new javax.swing.JButton();
+        filler8 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
+        btnVerMatricula = new javax.swing.JButton();
         filler7 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
         btnNuevaMatricula = new javax.swing.JButton();
         filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15));
         panelBusqueda = new javax.swing.JPanel();
         txtBuscar = new javax.swing.JTextField();
+        filler6 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0));
+        cboEstado = new javax.swing.JComboBox<>();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
         btnBuscar = new javax.swing.JButton();
         filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15));
@@ -116,26 +129,40 @@ public class PanelMatricula extends javax.swing.JPanel {
         panelSuperior.add(panelNombre);
         panelSuperior.add(filler4);
 
-        panelAgregar.setMaximumSize(new java.awt.Dimension(32767, 35));
-        panelAgregar.setMinimumSize(new java.awt.Dimension(400, 35));
-        panelAgregar.setOpaque(false);
-        panelAgregar.setPreferredSize(new java.awt.Dimension(32767, 35));
-        panelAgregar.setLayout(new javax.swing.BoxLayout(panelAgregar, javax.swing.BoxLayout.X_AXIS));
-        panelAgregar.add(filler5);
+        panelAccionesMatricula.setMaximumSize(new java.awt.Dimension(32767, 35));
+        panelAccionesMatricula.setMinimumSize(new java.awt.Dimension(400, 35));
+        panelAccionesMatricula.setOpaque(false);
+        panelAccionesMatricula.setPreferredSize(new java.awt.Dimension(32767, 35));
+        panelAccionesMatricula.setLayout(new javax.swing.BoxLayout(panelAccionesMatricula, javax.swing.BoxLayout.X_AXIS));
+        panelAccionesMatricula.add(filler5);
 
-        btnAnularMatricula.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        btnAnularMatricula.setText("Anular Matrícula");
-        btnAnularMatricula.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnAnularMatricula.setMaximumSize(new java.awt.Dimension(140, 35));
-        btnAnularMatricula.setMinimumSize(new java.awt.Dimension(140, 35));
-        btnAnularMatricula.setPreferredSize(new java.awt.Dimension(140, 35));
-        btnAnularMatricula.addActionListener(new java.awt.event.ActionListener() {
+        btnEstadoMatricula.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        btnEstadoMatricula.setText("Anular Matrícula");
+        btnEstadoMatricula.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnEstadoMatricula.setMaximumSize(new java.awt.Dimension(140, 35));
+        btnEstadoMatricula.setMinimumSize(new java.awt.Dimension(140, 35));
+        btnEstadoMatricula.setPreferredSize(new java.awt.Dimension(140, 35));
+        btnEstadoMatricula.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAnularMatriculaActionPerformed(evt);
+                btnEstadoMatriculaActionPerformed(evt);
             }
         });
-        panelAgregar.add(btnAnularMatricula);
-        panelAgregar.add(filler7);
+        panelAccionesMatricula.add(btnEstadoMatricula);
+        panelAccionesMatricula.add(filler8);
+
+        btnVerMatricula.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        btnVerMatricula.setText("Ver Matricula");
+        btnVerMatricula.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnVerMatricula.setMaximumSize(new java.awt.Dimension(140, 35));
+        btnVerMatricula.setMinimumSize(new java.awt.Dimension(140, 35));
+        btnVerMatricula.setPreferredSize(new java.awt.Dimension(140, 35));
+        btnVerMatricula.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnVerMatriculaActionPerformed(evt);
+            }
+        });
+        panelAccionesMatricula.add(btnVerMatricula);
+        panelAccionesMatricula.add(filler7);
 
         btnNuevaMatricula.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         btnNuevaMatricula.setText("Nueva Matrícula");
@@ -148,9 +175,9 @@ public class PanelMatricula extends javax.swing.JPanel {
                 btnNuevaMatriculaActionPerformed(evt);
             }
         });
-        panelAgregar.add(btnNuevaMatricula);
+        panelAccionesMatricula.add(btnNuevaMatricula);
 
-        panelSuperior.add(panelAgregar);
+        panelSuperior.add(panelAccionesMatricula);
         panelSuperior.add(filler3);
 
         panelBusqueda.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
@@ -183,6 +210,17 @@ public class PanelMatricula extends javax.swing.JPanel {
         txtBuscar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
             javax.swing.BorderFactory.createLineBorder(new java.awt.Color(200, 200, 200)),
             javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+    panelBusqueda.add(filler6);
+
+    cboEstado.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "TODOS", "VIGENTES", "ANULADAS" }));
+    cboEstado.setMinimumSize(new java.awt.Dimension(72, 35));
+    cboEstado.setPreferredSize(new java.awt.Dimension(72, 35));
+    cboEstado.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            cboEstadoActionPerformed(evt);
+        }
+    });
+    panelBusqueda.add(cboEstado);
     panelBusqueda.add(filler1);
 
     btnBuscar.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
@@ -296,9 +334,9 @@ public class PanelMatricula extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_btnNuevaMatriculaActionPerformed
 
-    private void btnAnularMatriculaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAnularMatriculaActionPerformed
+    private void btnEstadoMatriculaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEstadoMatriculaActionPerformed
        if (matriculaController == null) return;
-        
+          
         int filaSeleccionada = tablaMatricula.getSelectedRow();
         if (filaSeleccionada < 0) {
             mostrarMensaje("Por favor, seleccione una matrícula de la tabla para anular.", "Aviso", javax.swing.JOptionPane.WARNING_MESSAGE);
@@ -308,55 +346,46 @@ public class PanelMatricula extends javax.swing.JPanel {
         Matricula matriculaSeleccionada = getMatriculaPorFila(filaSeleccionada);
         if (matriculaSeleccionada == null) return;
 
-        if (!matriculaSeleccionada.getActivo()) {
-            mostrarMensaje("Esta matrícula ya se encuentra anulada.", "Aviso", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
         int confirmar = javax.swing.JOptionPane.showConfirmDialog(
             this, 
-            "¿Está seguro de que desea anular la matrícula " + matriculaSeleccionada.getCodigoMatricula() + "?", 
+            "¿Está seguro de que desea anular la matrícula " + matriculaSeleccionada.getCodigoMatricula() + "?\nEsta operación es irreversible.", 
             "Confirmar Anulación",
             javax.swing.JOptionPane.YES_NO_OPTION
         );
 
         if (confirmar == javax.swing.JOptionPane.YES_OPTION) {
-            if (matriculaController.anularMatricula(matriculaSeleccionada)) {
+            String error = matriculaController.anularMatricula(matriculaSeleccionada);
+            
+            if (error == null) {
                 mostrarMensaje("Matrícula anulada con éxito.", "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-                refrescarTabla(matriculaController.obtenerMatriculas());
+                
+                recargarDatos(); 
+                
+                btnEstadoMatricula.setEnabled(true);
+                btnEstadoMatricula.setText("Anular Matrícula");
             } else {
-                mostrarMensaje("No se pudo anular la matrícula.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                mostrarMensaje(error, "Error del Sistema", javax.swing.JOptionPane.ERROR_MESSAGE);
             }
         }
-    }//GEN-LAST:event_btnAnularMatriculaActionPerformed
+    }//GEN-LAST:event_btnEstadoMatriculaActionPerformed
 
     private void btnBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBuscarActionPerformed
         ejecutarFiltroBusqueda();
     }//GEN-LAST:event_btnBuscarActionPerformed
 
     private void tablaMatriculaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablaMatriculaMouseClicked
-        if (evt.getClickCount() == 2) { 
         int filaSeleccionada = tablaMatricula.getSelectedRow();
+        if (filaSeleccionada == -1) return;
+
+        String estadoFila = (String) tablaMatricula.getValueAt(filaSeleccionada, 6);
         
-        if (filaSeleccionada >= 0 && matriculasCargadas != null) {
-            String codigoMatriculaFila = (String) tablaMatricula.getValueAt(filaSeleccionada, 0);
-            Matricula matriculaSeleccionada = null;
-            
-  
-            for (int i = 0; i < matriculasCargadas.size(); i++) {
-                Matricula mat = matriculasCargadas.get(i);
-                
-                if (mat.getCodigoMatricula().equals(codigoMatriculaFila)) {
-                    matriculaSeleccionada = mat;
-                    break; 
-                }
-            }
-            
-            if (matriculaSeleccionada != null) {
-                abrirDetalle(matriculaSeleccionada);
-            }
+        if (estadoFila.equals("ACTIVA")) {
+            btnEstadoMatricula.setEnabled(true);
+            btnEstadoMatricula.setText("Anular Matrícula");
+        } else {
+            btnEstadoMatricula.setEnabled(false);
+            btnEstadoMatricula.setText("Matrícula Anulada");
         }
-    }
     }//GEN-LAST:event_tablaMatriculaMouseClicked
 
     private void txtBuscarFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtBuscarFocusGained
@@ -370,6 +399,28 @@ public class PanelMatricula extends javax.swing.JPanel {
             txtBuscar.setText("Buscar por DNI, Codigo o Nombre del Alumno");
         }
     }//GEN-LAST:event_txtBuscarFocusLost
+
+    private void cboEstadoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboEstadoActionPerformed
+        if (matriculaController == null) return;
+
+        String seleccion = (String) cboEstado.getSelectedItem();
+        List<Matricula> resultadosFiltrados = matriculaController.obtenerMatriculasPorEstado(seleccion);
+
+        refrescarTabla(resultadosFiltrados);
+    }//GEN-LAST:event_cboEstadoActionPerformed
+
+    private void btnVerMatriculaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVerMatriculaActionPerformed
+        int filaSeleccionada = tablaMatricula.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            mostrarMensaje("Seleccione una matrícula para consultar sus cursos asignados.", "Aviso", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        Matricula seleccionada = getMatriculaPorFila(filaSeleccionada);
+        if (seleccionada != null) {
+            abrirDetalle(seleccionada);
+        }
+    }//GEN-LAST:event_btnVerMatriculaActionPerformed
 
     private void ejecutarFiltroBusqueda() {
         if (matriculaController != null) {
@@ -394,18 +445,22 @@ public class PanelMatricula extends javax.swing.JPanel {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnAnularMatricula;
     private javax.swing.JButton btnBuscar;
+    private javax.swing.JButton btnEstadoMatricula;
     private javax.swing.JButton btnNuevaMatricula;
+    private javax.swing.JButton btnVerMatricula;
+    private javax.swing.JComboBox<String> cboEstado;
     private javax.swing.Box.Filler filler1;
     private javax.swing.Box.Filler filler2;
     private javax.swing.Box.Filler filler3;
     private javax.swing.Box.Filler filler4;
     private javax.swing.Box.Filler filler5;
+    private javax.swing.Box.Filler filler6;
     private javax.swing.Box.Filler filler7;
+    private javax.swing.Box.Filler filler8;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel nombrePanel;
-    private javax.swing.JPanel panelAgregar;
+    private javax.swing.JPanel panelAccionesMatricula;
     private javax.swing.JPanel panelBusqueda;
     private javax.swing.JPanel panelCentral;
     private javax.swing.JPanel panelInferior;

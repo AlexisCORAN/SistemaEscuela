@@ -4,12 +4,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
  */
 package plan_estudios.view;
+import docentes.controller.DocenteController;
 import docentes.model.Docente;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
-import plan_estudios.controller.CursoController;
+import plan_estudios.controller.PlanEstudiosController;
 import plan_estudios.model.Curso;
 import plan_estudios.model.Grado;
 
@@ -19,35 +20,44 @@ import plan_estudios.model.Grado;
  */
 public class PanelPlanEstudios extends javax.swing.JPanel {
 
-    private final CursoController cursoController;
+    private final PlanEstudiosController planEstudiosController;
+    private final DocenteController docenteController;
     private List<Curso> cursosCargados = new ArrayList<>();
     
     /**
      * Creates new form PanelAlumnos
      */
     public PanelPlanEstudios() {
-        this.cursoController = null; 
+        this.planEstudiosController = null;
+        this.docenteController = null;
         initComponents();
         this.setBackground(java.awt.Color.WHITE);
     }
      
-    public PanelPlanEstudios(CursoController cursoController) {
-        this.cursoController = cursoController;
+    public PanelPlanEstudios(PlanEstudiosController planEstudiosController, DocenteController docenteController) {
+        this.planEstudiosController = planEstudiosController;
+        this.docenteController = docenteController;
         initComponents();
-        
         this.setBackground(java.awt.Color.WHITE);
-        
-        tablaPlanEstudios.getTableHeader().setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
-        
-        if (cursoController != null) {
-            javax.swing.SwingUtilities.invokeLater(() -> refrescarTabla(cursoController.obtenerCursos()));
+        if (this.planEstudiosController != null) {
+            javax.swing.SwingUtilities.invokeLater(() -> refrescarTabla(planEstudiosController.obtenerCursos()));
         }
+    }
+    
+    public void recargarDatos() {
+        if (planEstudiosController == null) return;
+
+        String seleccionActual = (String) cboEstado.getSelectedItem();
+
+        List<Curso> datosActualizados = planEstudiosController.obtenerCursosPorEstado(seleccionActual);
+
+        refrescarTabla(datosActualizados);
     }
 
     public void refrescarTabla(List<Curso> cursos) {
-        this.cursosCargados = (cursos != null) ? cursos : Collections.emptyList(); 
+        this.cursosCargados = (cursos != null) ? cursos : Collections.emptyList();
         DefaultTableModel modelo = (DefaultTableModel) tablaPlanEstudios.getModel();
-        modelo.setRowCount(0); 
+        modelo.setRowCount(0);
 
         for (Curso c : this.cursosCargados) {
             modelo.addRow(new Object[]{
@@ -55,38 +65,9 @@ public class PanelPlanEstudios extends javax.swing.JPanel {
                 c.getNombre(),
                 c.getGradoAsignado() != null ? c.getGradoAsignado().getNombre() + " - " + c.getGradoAsignado().getNivel() : "No asignado",
                 c.getHorasSemanales(),
-                c.getDocente() != null ? c.getDocente().getApellidos() + ", " + c.getDocente().getNombres() : "Por asignar",
+                c.getDocente() != null ? c.getDocente().getNombreCompleto() : "Por asignar",
                 c.isActivo() ? "ACTIVO" : "INACTIVO"
             });
-        }
-    }
-
-    private void abrirDialogoEdicion(Curso cursoOriginal) {
-        java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
-        if (parentWindow instanceof java.awt.Frame frame && cursoController != null) {
-            
-            Curso copiaCurso = new Curso();
-            copiaCurso.setId(cursoOriginal.getId());
-            copiaCurso.setCodigo(cursoOriginal.getCodigo());
-            copiaCurso.setNombre(cursoOriginal.getNombre());
-            copiaCurso.setHorasSemanales(cursoOriginal.getHorasSemanales());
-            copiaCurso.setActivo(cursoOriginal.isActivo()); 
-            
-            if (cursoOriginal.getDocente() != null) {
-                copiaCurso.setDocente(cursoOriginal.getDocente());
-            }
-            if (cursoOriginal.getGradoAsignado() != null) {
-                copiaCurso.asociarGrado(cursoOriginal.getGradoAsignado());
-            }
-            
-            plan_estudios.controller.GradoController gradoController = new plan_estudios.controller.GradoController();
-            docentes.controller.DocenteController docenteController = new docentes.controller.DocenteController();
-            
-            List<Grado> grados = gradoController.obtenerGradosActivos();
-            List<Docente> docentes = docenteController.obtenerDocentes();
-            
-            DialogNuevoCurso dialog = new DialogNuevoCurso(frame, true, cursoController, this, copiaCurso, grados, docentes);
-            dialog.setVisible(true);
         }
     }
 
@@ -105,14 +86,18 @@ public class PanelPlanEstudios extends javax.swing.JPanel {
         panelNombre = new javax.swing.JPanel();
         nombrePanel = new javax.swing.JLabel();
         filler4 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 50), new java.awt.Dimension(0, 50), new java.awt.Dimension(32767, 32767));
-        panelAgregar = new javax.swing.JPanel();
-        filler5 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
-        btnDarBaja = new javax.swing.JButton();
-        filler7 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
-        btnNuevoCurso = new javax.swing.JButton();
+        panelAccionesCurso = new javax.swing.JPanel();
+        filler10 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        btnEstadoCurso = new javax.swing.JButton();
+        filler11 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
+        btnEdicionCurso = new javax.swing.JButton();
+        filler12 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
+        btnNuevo = new javax.swing.JButton();
         filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15));
         panelBusqueda = new javax.swing.JPanel();
         txtBuscar = new javax.swing.JTextField();
+        filler5 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0));
+        cboEstado = new javax.swing.JComboBox<>();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0), new java.awt.Dimension(30, 0));
         btnBuscar = new javax.swing.JButton();
         filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15), new java.awt.Dimension(0, 15));
@@ -144,41 +129,55 @@ public class PanelPlanEstudios extends javax.swing.JPanel {
         panelSuperior.add(panelNombre);
         panelSuperior.add(filler4);
 
-        panelAgregar.setMaximumSize(new java.awt.Dimension(32767, 35));
-        panelAgregar.setMinimumSize(new java.awt.Dimension(400, 35));
-        panelAgregar.setOpaque(false);
-        panelAgregar.setPreferredSize(new java.awt.Dimension(32767, 35));
-        panelAgregar.setLayout(new javax.swing.BoxLayout(panelAgregar, javax.swing.BoxLayout.X_AXIS));
-        panelAgregar.add(filler5);
+        panelAccionesCurso.setMaximumSize(new java.awt.Dimension(32767, 35));
+        panelAccionesCurso.setMinimumSize(new java.awt.Dimension(400, 35));
+        panelAccionesCurso.setOpaque(false);
+        panelAccionesCurso.setPreferredSize(new java.awt.Dimension(32767, 35));
+        panelAccionesCurso.setLayout(new javax.swing.BoxLayout(panelAccionesCurso, javax.swing.BoxLayout.X_AXIS));
+        panelAccionesCurso.add(filler10);
 
-        btnDarBaja.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        btnDarBaja.setText("Dar de Baja Curso");
-        btnDarBaja.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnDarBaja.setMaximumSize(new java.awt.Dimension(150, 35));
-        btnDarBaja.setMinimumSize(new java.awt.Dimension(150, 35));
-        btnDarBaja.setPreferredSize(new java.awt.Dimension(150, 35));
-        btnDarBaja.addActionListener(new java.awt.event.ActionListener() {
+        btnEstadoCurso.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        btnEstadoCurso.setText("Dar baja Curso");
+        btnEstadoCurso.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnEstadoCurso.setMaximumSize(new java.awt.Dimension(140, 35));
+        btnEstadoCurso.setMinimumSize(new java.awt.Dimension(140, 35));
+        btnEstadoCurso.setPreferredSize(new java.awt.Dimension(140, 35));
+        btnEstadoCurso.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnDarBajaActionPerformed(evt);
+                btnEstadoCursoActionPerformed(evt);
             }
         });
-        panelAgregar.add(btnDarBaja);
-        panelAgregar.add(filler7);
+        panelAccionesCurso.add(btnEstadoCurso);
+        panelAccionesCurso.add(filler11);
 
-        btnNuevoCurso.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        btnNuevoCurso.setText("Nuevo Curso");
-        btnNuevoCurso.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnNuevoCurso.setMaximumSize(new java.awt.Dimension(140, 35));
-        btnNuevoCurso.setMinimumSize(new java.awt.Dimension(140, 35));
-        btnNuevoCurso.setPreferredSize(new java.awt.Dimension(140, 35));
-        btnNuevoCurso.addActionListener(new java.awt.event.ActionListener() {
+        btnEdicionCurso.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        btnEdicionCurso.setText("Editar Curso");
+        btnEdicionCurso.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnEdicionCurso.setMaximumSize(new java.awt.Dimension(140, 35));
+        btnEdicionCurso.setMinimumSize(new java.awt.Dimension(140, 35));
+        btnEdicionCurso.setPreferredSize(new java.awt.Dimension(140, 35));
+        btnEdicionCurso.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnNuevoCursoActionPerformed(evt);
+                btnEdicionCursoActionPerformed(evt);
             }
         });
-        panelAgregar.add(btnNuevoCurso);
+        panelAccionesCurso.add(btnEdicionCurso);
+        panelAccionesCurso.add(filler12);
 
-        panelSuperior.add(panelAgregar);
+        btnNuevo.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        btnNuevo.setText("Nuevo Curso");
+        btnNuevo.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnNuevo.setMaximumSize(new java.awt.Dimension(140, 35));
+        btnNuevo.setMinimumSize(new java.awt.Dimension(140, 35));
+        btnNuevo.setPreferredSize(new java.awt.Dimension(140, 35));
+        btnNuevo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNuevoActionPerformed(evt);
+            }
+        });
+        panelAccionesCurso.add(btnNuevo);
+
+        panelSuperior.add(panelAccionesCurso);
         panelSuperior.add(filler3);
 
         panelBusqueda.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
@@ -203,6 +202,17 @@ public class PanelPlanEstudios extends javax.swing.JPanel {
         txtBuscar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
             javax.swing.BorderFactory.createLineBorder(new java.awt.Color(200, 200, 200)),
             javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+    panelBusqueda.add(filler5);
+
+    cboEstado.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "TODOS", "ACTIVOS", "INACTIVOS" }));
+    cboEstado.setMinimumSize(new java.awt.Dimension(72, 35));
+    cboEstado.setPreferredSize(new java.awt.Dimension(72, 35));
+    cboEstado.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            cboEstadoActionPerformed(evt);
+        }
+    });
+    panelBusqueda.add(cboEstado);
     panelBusqueda.add(filler1);
 
     btnBuscar.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
@@ -304,118 +314,134 @@ public class PanelPlanEstudios extends javax.swing.JPanel {
     add(panelPrincipal, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnDarBajaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDarBajaActionPerformed
-    int filaSeleccionada = tablaPlanEstudios.getSelectedRow();
-        if (filaSeleccionada < 0 || cursosCargados == null) {
-            mostrarMensaje("Seleccione un curso de la tabla para darle de baja.", "Aviso", javax.swing.JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String codigoFila = (String) tablaPlanEstudios.getValueAt(filaSeleccionada, 0);
-        Curso seleccionado = null;
-        
-        for (int i = 0; i < cursosCargados.size(); i++) {
-            if (cursosCargados.get(i).getCodigo().equals(codigoFila)) {
-                seleccionado = cursosCargados.get(i);
-                break;
-            }
-        }
-
-        if (seleccionado == null || cursoController == null) return;
-
-        int confirmar = javax.swing.JOptionPane.showConfirmDialog(
-            this, 
-            "¿Está seguro de que desea dar de baja el curso " + seleccionado.getNombre() + "?\n" +
-            "Esta operación cambiará su estado a INACTIVO.",
-            "Confirmar Baja Lógica",
-            javax.swing.JOptionPane.YES_NO_OPTION
-        );
-
-        if (confirmar == javax.swing.JOptionPane.YES_OPTION) {
-            if (cursoController.darDeBajaCurso(seleccionado)) {
-                mostrarMensaje("El curso ha sido dado de baja correctamente.", "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-                refrescarTabla(cursoController.obtenerCursos());
-            } else {
-                mostrarMensaje("No se pudo procesar el cambio de estado.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-            }
-        }        
-    }//GEN-LAST:event_btnDarBajaActionPerformed
-
     private void txtBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBuscarActionPerformed
         ejecutarFiltroBusqueda();
     }//GEN-LAST:event_txtBuscarActionPerformed
-
-    private void btnNuevoCursoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNuevoCursoActionPerformed
-        java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
-        if (parentWindow instanceof java.awt.Frame frame && cursoController != null) {
-            
-            plan_estudios.controller.GradoController gradoController = new plan_estudios.controller.GradoController();
-            docentes.controller.DocenteController docenteController = new docentes.controller.DocenteController();
-            
-            List<Grado> grados = gradoController.obtenerGradosActivos();
-            List<Docente> docentes = docenteController.obtenerDocentes();
-
-            DialogNuevoCurso dialog = new DialogNuevoCurso(frame, true, cursoController, this, null, grados, docentes);
-            dialog.setVisible(true);
-        }
-    }//GEN-LAST:event_btnNuevoCursoActionPerformed
 
     private void btnBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBuscarActionPerformed
         ejecutarFiltroBusqueda();
     }//GEN-LAST:event_btnBuscarActionPerformed
 
     private void tablaPlanEstudiosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablaPlanEstudiosMouseClicked
-        if (evt.getClickCount() == 2) {
-            int filaSeleccionada = tablaPlanEstudios.getSelectedRow();
-            if (filaSeleccionada >= 0 && cursosCargados != null) {
-                String codigoFila = (String) tablaPlanEstudios.getValueAt(filaSeleccionada, 0);
-                Curso seleccionado = null;
-                
-                for (int i = 0; i < cursosCargados.size(); i++) {
-                    if (cursosCargados.get(i).getCodigo().equals(codigoFila)) {
-                        seleccionado = cursosCargados.get(i);
-                        break;
-                    }
-                }
-                
-                if (seleccionado != null) {
-                    abrirDialogoEdicion(seleccionado);
-                }
-            }
+        int fila = tablaPlanEstudios.getSelectedRow();
+        if (fila != -1) {
+            String estado = (String) tablaPlanEstudios.getValueAt(fila, 5);
+            btnEstadoCurso.setText(estado.equals("ACTIVO") ? "Dar de Baja" : "Reactivar Curso");
         }
     }//GEN-LAST:event_tablaPlanEstudiosMouseClicked
 
+    private void btnEstadoCursoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEstadoCursoActionPerformed
+    int filaSeleccionada = tablaPlanEstudios.getSelectedRow();
+    if (filaSeleccionada == -1) {
+        mostrarError("Por favor, seleccione un curso de la tabla.");
+        return;
+    }
+
+    String codigo = (String) tablaPlanEstudios.getValueAt(filaSeleccionada, 0);
+    String estadoActual = (String) tablaPlanEstudios.getValueAt(filaSeleccionada, 5); // Columna 5 es "Estado del Curso"
+
+    boolean esReactivacion = estadoActual.equals("INACTIVO");
+    String accion = esReactivacion ? "reactivar" : "dar de baja";
+    String titulo = esReactivacion ? "Confirmar Reactivación" : "Confirmar Baja";
+
+    int confirmacion = javax.swing.JOptionPane.showConfirmDialog(this,
+        "¿Está seguro de que desea " + accion + " el curso: " + codigo + "?",
+        titulo, javax.swing.JOptionPane.YES_NO_OPTION);
+
+    if (confirmacion == javax.swing.JOptionPane.YES_OPTION) {
+        String error = esReactivacion 
+            ? planEstudiosController.procesarReactivacionPorCodigo(codigo) 
+            : planEstudiosController.procesarBajaPorCodigo(codigo);
+
+        if (error == null) {
+            String mensajeExito = esReactivacion ? "Curso reactivado correctamente." : "Curso dado de baja correctamente.";
+            javax.swing.JOptionPane.showMessageDialog(this, mensajeExito);
+            
+            recargarDatos(); 
+        } else {
+            mostrarError(error);
+        }
+    }
+    }//GEN-LAST:event_btnEstadoCursoActionPerformed
+
+    private void btnEdicionCursoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEdicionCursoActionPerformed
+    int fila = tablaPlanEstudios.getSelectedRow();
+        if (fila == -1) {
+            mostrarError("Por favor, seleccione un curso de la tabla para editar.");
+            return;
+        }
+
+        String codigo = (String) tablaPlanEstudios.getValueAt(fila, 0);
+        Curso cursoParaEditar = planEstudiosController.obtenerCursoParaEdicion(codigo);
+
+        if (cursoParaEditar != null) {
+            java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
+            if (parentWindow instanceof main.VentanaPrincipal main) {
+                List<Grado> grados = planEstudiosController.obtenerGradosActivos();
+                List<Docente> docentes = docenteController.obtenerDocentesPorEstado("ACTIVOS");
+                DialogNuevoCurso dialog = new DialogNuevoCurso(main, true, planEstudiosController, main, cursoParaEditar, grados, docentes);
+                dialog.setVisible(true);
+            }
+        } else {
+            mostrarError("No se pudieron cargar los datos del curso. Inténtelo de nuevo.");
+        }
+    }//GEN-LAST:event_btnEdicionCursoActionPerformed
+
+    private void btnNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNuevoActionPerformed
+       java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
+        if (parentWindow instanceof main.VentanaPrincipal main) {
+            List<Grado> grados = planEstudiosController.obtenerGradosActivos();
+            List<Docente> docentes = docenteController.obtenerDocentesPorEstado("ACTIVOS");
+            DialogNuevoCurso dialog = new DialogNuevoCurso(main, true, planEstudiosController, main, null, grados, docentes);
+            dialog.setVisible(true);
+        }
+    }//GEN-LAST:event_btnNuevoActionPerformed
+
+    private void cboEstadoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboEstadoActionPerformed
+        if (planEstudiosController == null) return;
+
+        String seleccion = (String) cboEstado.getSelectedItem();
+
+        List<Curso> resultadosFiltrados = planEstudiosController.obtenerCursosPorEstado(seleccion);
+
+        refrescarTabla(resultadosFiltrados);
+    }//GEN-LAST:event_cboEstadoActionPerformed
+
     private void ejecutarFiltroBusqueda() {
-        if (cursoController != null) {
+        if (planEstudiosController != null) {
             String codigoBusqueda = txtBuscar.getText().trim();
-            List<Curso> resultados = cursoController.buscarPorCodigo(codigoBusqueda);
+            List<Curso> resultados = planEstudiosController.buscarCursosPorCodigoBusqueda(codigoBusqueda);
             
             if (resultados.isEmpty() && !codigoBusqueda.isEmpty() && !codigoBusqueda.equals("Buscar por Código")) {
                 refrescarTabla(Collections.emptyList());
-                mostrarMensaje("No se encontró ningún curso con el código: " + codigoBusqueda, "Búsqueda", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                mostrarError("No se encontró ningún planEstudios con el código: " + codigoBusqueda);
             } else {
                 refrescarTabla(resultados);
             }
         }
     }
 
-    public void mostrarMensaje(String mensaje, String titulo, int tipoMensaje) {
-        javax.swing.JOptionPane.showMessageDialog(this, mensaje, titulo, tipoMensaje);
+    public void mostrarError(String mensaje) {
+        javax.swing.JOptionPane.showMessageDialog(this, mensaje, "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBuscar;
-    private javax.swing.JButton btnDarBaja;
-    private javax.swing.JButton btnNuevoCurso;
+    private javax.swing.JButton btnEdicionCurso;
+    private javax.swing.JButton btnEstadoCurso;
+    private javax.swing.JButton btnNuevo;
+    private javax.swing.JComboBox<String> cboEstado;
     private javax.swing.Box.Filler filler1;
+    private javax.swing.Box.Filler filler10;
+    private javax.swing.Box.Filler filler11;
+    private javax.swing.Box.Filler filler12;
     private javax.swing.Box.Filler filler2;
     private javax.swing.Box.Filler filler3;
     private javax.swing.Box.Filler filler4;
     private javax.swing.Box.Filler filler5;
-    private javax.swing.Box.Filler filler7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel nombrePanel;
-    private javax.swing.JPanel panelAgregar;
+    private javax.swing.JPanel panelAccionesCurso;
     private javax.swing.JPanel panelBusqueda;
     private javax.swing.JPanel panelCentral;
     private javax.swing.JPanel panelInferior;

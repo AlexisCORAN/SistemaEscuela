@@ -5,7 +5,6 @@
 package docentes.dao;
 import java.util.List;
 import java.sql.Connection;
-import config.ConexionDB;
 import shared.JdbcTemplate;
 import shared.RowMappers;
 import docentes.model.Docente;
@@ -26,32 +25,10 @@ public class DocenteDAOImpl implements IDocenteDAO {
         this.conexion = conexion;
     }
 
-    private Object[] mapearDocente(Docente d) {
-        return new Object[]{
-            d.getCodigoDocente(),
-            d.getDni(),
-            d.getNombres(), 
-            d.getApellidos(), 
-            d.getFechaNacimiento() != null ? java.sql.Date.valueOf(d.getFechaNacimiento()) : null, 
-            d.getTituloProfesional(),
-            d.getEspecialidadAcademica(), 
-            d.getTelefono(),
-            d.getCorreo(),
-            d.isActivo() ? "ACTIVO" : "INACTIVO"
-        };
-    }
-
     @Override
     public List<Docente> listarTodos() {
         if (conexion == null) return Collections.emptyList();
         return JdbcTemplate.query(conexion, SELECT_BASE, RowMappers.DOCENTE_ROW_MAPPER);
-    }
-
-    @Override
-    public Docente obtenerPorId(final Object id) {
-        if (conexion == null) return null;
-        final String sql = SELECT_BASE + " WHERE idDocente = ?";
-        return JdbcTemplate.queryForObject(conexion, sql, RowMappers.DOCENTE_ROW_MAPPER, id);
     }
 
     @Override
@@ -65,7 +42,18 @@ public class DocenteDAOImpl implements IDocenteDAO {
     public boolean insertar(final Docente d) {
         if (conexion == null) return false;
         final String sql = "INSERT INTO Docente (codigoDocente, dni, nombres, apellidos, fechaNacimiento, tituloProfesional, especialidadAcademica, telefono, correo, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        return JdbcTemplate.update(conexion, sql, mapearDocente(d)) > 0;
+        return JdbcTemplate.update(conexion, sql,
+                d.getCodigoDocente(),
+                d.getDni(),
+                d.getNombres(), 
+                d.getApellidos(), 
+                d.getFechaNacimiento() != null ? java.sql.Date.valueOf(d.getFechaNacimiento()) : null, 
+                d.getTituloProfesional(),
+                d.getEspecialidadAcademica(), 
+                d.getTelefono(),
+                d.getCorreo(),
+                d.isActivo() ? "ACTIVO" : "CESADO"
+                ) > 0;
     }
 
     @Override
@@ -105,9 +93,25 @@ public class DocenteDAOImpl implements IDocenteDAO {
     }
 
     @Override
-    public List<Docente> listarActivos() {
+    public boolean existeDni(String dni, Integer idExcluido) {
+        if (conexion == null || dni == null || dni.isBlank()) return false;
+        final String sql = "SELECT COUNT(idDocente) FROM Docente WHERE dni = ? AND idDocente != ISNULL(?, -1)";
+        Integer count = JdbcTemplate.queryForObject(conexion, sql, (rs) -> rs.getInt(1), dni, idExcluido);
+        return count != null && count > 0;
+    }
+    
+    @Override
+    public List<Docente> listarPorEstado(boolean activo) {
         if (conexion == null) return Collections.emptyList();
-        final String sql = SELECT_BASE + " WHERE estado = 'ACTIVO'";
-        return JdbcTemplate.query(conexion, sql, RowMappers.DOCENTE_ROW_MAPPER);
+
+        final String estadoDb = activo ? "ACTIVO" : "CESADO";
+        final String sql = SELECT_BASE + " WHERE estado = ?";
+
+        return JdbcTemplate.query(conexion, sql, RowMappers.DOCENTE_ROW_MAPPER, estadoDb);
+    }
+
+    @Override
+    public Docente obtenerPorId(Object id) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }

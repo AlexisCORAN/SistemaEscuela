@@ -36,6 +36,21 @@ public class Docente extends Persona {
         this.correo = validarCorreoFormato(correo);
         validarContactoObligatorio(this.telefono, this.correo);
     }
+    
+    public Docente(Docente otroDocente) {
+        super(otroDocente.getId(), otroDocente.getDni(), otroDocente.getNombres(), otroDocente.getApellidos(), 
+              otroDocente.getFechaNacimiento(), otroDocente.isActivo());
+        this.codigoDocente = otroDocente.getCodigoDocente();
+        this.tituloProfesional = otroDocente.getTituloProfesional();
+        this.especialidadAcademica = otroDocente.getEspecialidadAcademica();
+        this.telefono = otroDocente.getTelefono();
+        this.correo = otroDocente.getCorreo();
+        
+    }
+
+
+    
+    
 
     private String validarCadena(String valor, String campo) {
         String validado = Objects.requireNonNull(valor, campo + " no puede ser nulo").trim();

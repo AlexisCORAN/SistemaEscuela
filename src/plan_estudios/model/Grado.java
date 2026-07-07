@@ -31,6 +31,20 @@ public class Grado {
         this.activo = activo;
         this.cursos = new ArrayList<>();
     }
+    
+    public Grado(Grado otro) {
+        this.id = otro.getId();
+        this.nombre = otro.getNombre();
+        this.nivel = otro.getNivel();
+        this.activo = otro.isActivo();
+        this.cursos = new ArrayList<>();
+        
+        if (otro.getCursos() != null) {
+            for (Curso c : otro.getCursos()) {
+                this.agregarCurso(new Curso(c));
+            }
+        }
+    }
 
     private String validarCadena(String valor, String campo) {
         String validado = Objects.requireNonNull(valor, campo + " no puede ser nulo").trim();

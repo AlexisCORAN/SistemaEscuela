@@ -41,13 +41,6 @@ public class AlumnoDAOImpl implements IAlumnoDAO {
         return JdbcTemplate.query(conexion, SELECT_BASE, RowMappers.ALUMNO_ROW_MAPPER);
     }
 
-    @Override
-    public Alumno obtenerPorId(final Object id) {
-        if (conexion == null) return null;
-        
-        final String sql = SELECT_BASE + " WHERE A.idAlumno = ?";
-        return JdbcTemplate.queryForObject(conexion, sql, RowMappers.ALUMNO_ROW_MAPPER, id);
-    }
     
     @Override
     public String obtenerUltimoCodigo() {
@@ -110,23 +103,16 @@ public class AlumnoDAOImpl implements IAlumnoDAO {
         final String sql = SELECT_BASE + " WHERE A.codigoEstudiante = ?";
         return JdbcTemplate.queryForObject(conexion, sql, RowMappers.ALUMNO_ROW_MAPPER, codigoEstudiante);
     }
-
+    
     @Override
-    public List<Alumno> listarPorApoderado(final Integer idApoderado) { 
-        if (conexion == null) return Collections.emptyList();
+    public Alumno buscarPorDni(final String codigoEstudiante) {
+        if (conexion == null) return null;
         
-        final String sql = SELECT_BASE + " WHERE A.idApoderado = ?";
-        return JdbcTemplate.query(conexion, sql, RowMappers.ALUMNO_ROW_MAPPER, idApoderado);
-    }
-
-    @Override
-    public List<Alumno> listarPorTelefonoApoderado(final String telefono) {
-        if (conexion == null) return Collections.emptyList();
-        
-        final String sql = SELECT_BASE + " WHERE P.telefono = ?";
-        return JdbcTemplate.query(conexion, sql, RowMappers.ALUMNO_ROW_MAPPER, telefono);
+        final String sql = SELECT_BASE + " WHERE A.dni = ?";
+        return JdbcTemplate.queryForObject(conexion, sql, RowMappers.ALUMNO_ROW_MAPPER, codigoEstudiante);
     }
     
+
     @Override
     public List<Alumno> listarPorEstado(boolean activo) {
         if (conexion == null) return Collections.emptyList();
@@ -136,4 +122,20 @@ public class AlumnoDAOImpl implements IAlumnoDAO {
 
         return JdbcTemplate.query(conexion, sql, RowMappers.ALUMNO_ROW_MAPPER, estadoDb);
     }
+
+    @Override
+    public boolean existeDni(String dni, Integer idExcluido) {
+        if (conexion == null || dni == null || dni.isBlank()) return false;
+        
+        final String sql = "SELECT COUNT(idAlumno) FROM Alumno WHERE dni = ? AND idAlumno != ISNULL(?, -1)";
+        Integer count = JdbcTemplate.queryForObject(conexion, sql, (rs) -> rs.getInt(1), dni, idExcluido);
+        
+        return count != null && count > 0;
+    }
+
+    @Override
+    public Alumno obtenerPorId(Object id) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
 }

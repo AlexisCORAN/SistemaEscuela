@@ -58,6 +58,6 @@ public class MatriculaCurso {
     }
 
     public boolean estaAprobado() {
-        return this.notaFinal >= 11.5; // Ajustado al redondeo común en el sistema peruano (12)
+        return this.notaFinal >= 12; 
     }
 }

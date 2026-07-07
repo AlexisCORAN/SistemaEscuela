@@ -6,7 +6,6 @@ package alumnos.dao;
 
 import java.sql.Connection;
 import java.util.List;
-import java.util.Collections;
 import shared.JdbcTemplate;
 import alumnos.model.Apoderado;
 /**
@@ -46,19 +45,32 @@ public class ApoderadoDAOImpl implements IApoderadoDAO {
                 a.getDni(), a.getFechaNacimiento(), a.getNombres(), a.getApellidos(), 
                 a.getParentesco(), a.getTelefono(), a.getCorreo(), a.getId()) > 0;
     }
-
-    @Override
-    public boolean eliminar(final Object id) {
-        throw new UnsupportedOperationException("Operación de eliminación no soportada aún para Apoderado.");
-    }
-
-    @Override
-    public Apoderado obtenerPorId(final Object id) {
-        throw new UnsupportedOperationException("Operación de búsqueda no soportada aún para Apoderado.");
+    
+     @Override
+    public boolean existeDni(String dni, Integer idExcluido) {
+        if (conexion == null || dni == null || dni.isBlank()) return false;
+        
+        final String sql = "SELECT COUNT(idApoderado) FROM Apoderado WHERE dni = ? AND idApoderado != ISNULL(?, -1)";
+        Integer count = JdbcTemplate.queryForObject(conexion, sql, (rs) -> rs.getInt(1), dni, idExcluido);
+        
+        return count != null && count > 0;
     }
 
     @Override
     public List<Apoderado> listarTodos() {
-        return Collections.emptyList();
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
+
+    @Override
+    public Apoderado obtenerPorId(Object id) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public boolean eliminar(Object id) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    
+
 }

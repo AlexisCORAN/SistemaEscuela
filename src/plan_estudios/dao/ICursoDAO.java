@@ -14,7 +14,6 @@ import shared.CrudDAO;
 public interface ICursoDAO extends CrudDAO<Curso>{
     String obtenerUltimoCodigo();
     Curso buscarPorCodigo(String codigoCurso);
-    List<Curso> listarPorGrado(Integer idGrado);
-    List<Curso> listarPorDocente(Integer idDocente);
+    List<Curso> listarPorEstado(boolean activo);
     Curso buscarPorNombre(String nombre);
 }

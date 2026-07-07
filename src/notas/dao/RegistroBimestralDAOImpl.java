@@ -16,13 +16,17 @@ import java.util.Collections;
 public class RegistroBimestralDAOImpl implements IRegistroBimestralDAO {
 
     private static final double NOTA_MINIMA_APROBATORIA = 11.0;
+    // Constantes para pesos académicos
+    private static final double PESO_PRACTICA = 0.2;
+    private static final double PESO_TAREA = 0.2;
+    private static final double PESO_PARCIAL = 0.3;
+    private static final double PESO_BIMESTRAL = 0.3;
 
     private final Connection conexion;
 
     private static final String SELECT_BASE = 
         "SELECT rb.idRegistroBimestral, rb.idMatriculaCurso, rb.bimestre, rb.estado, " +
-        "       c.nombre AS cursoNombre, " +
-        "       a.dni AS alumnoDni, a.nombres AS alumnoNombres, a.apellidos AS alumnoApellidos " +
+        "       c.nombre AS cursoNombre, a.dni AS alumnoDni, a.nombres AS alumnoNombres, a.apellidos AS alumnoApellidos " +
         "FROM RegistroBimestral rb " +
         "LEFT JOIN MatriculaCurso mc ON rb.idMatriculaCurso = mc.idMatriculaCurso " +
         "LEFT JOIN Curso c ON mc.idCurso = c.idCurso " +
@@ -119,58 +123,53 @@ public class RegistroBimestralDAOImpl implements IRegistroBimestralDAO {
     @Override
     public List<Object[]> listarNotasParaTabla(int idGrado, int idCurso, int bimestre) {
         if (conexion == null) return Collections.emptyList();
+        String sql = 
+            "SELECT rb.idRegistroBimestral, m.codigoMatricula, a.apellidos + ', ' + a.nombres AS alumnoNombre, " +
+            "       ISNULL(e.tipo, 'SIN NOTAS') AS tipo, ISNULL(e.nota, 0.0) AS nota, " +
+            "       ISNULL(rb.estado, 'ABIERTO') AS estado " + 
+            "FROM MatriculaCurso mc " +
+            "INNER JOIN Matricula m ON mc.idMatricula = m.idMatricula " +
+            "INNER JOIN Alumno a ON m.idAlumno = a.idAlumno " +
+            "LEFT JOIN RegistroBimestral rb ON mc.idMatriculaCurso = rb.idMatriculaCurso AND rb.bimestre = ? " +
+            "LEFT JOIN Evaluacion e ON rb.idRegistroBimestral = e.idRegistroBimestral " +
+            "WHERE m.idGrado = ? AND mc.idCurso = ? " +
+            "ORDER BY alumnoNombre ASC"; 
 
-        String sql = "SELECT rb.idRegistroBimestral, m.codigoMatricula, a.apellidos + ', ' + a.nombres AS alumnoNombre, " +
-                     "       MAX(CASE WHEN e.tipo = 'PRACTICA' THEN e.nota ELSE 0 END) as practica, " +
-                     "       MAX(CASE WHEN e.tipo = 'TAREA' THEN e.nota ELSE 0 END) as tarea, " +
-                     "       MAX(CASE WHEN e.tipo = 'PARCIAL' THEN e.nota ELSE 0 END) as parcial, " +
-                     "       MAX(CASE WHEN e.tipo = 'BIMESTRAL' THEN e.nota ELSE 0 END) as bimestral " +
-                     "FROM RegistroBimestral rb " +
-                     "INNER JOIN MatriculaCurso mc ON rb.idMatriculaCurso = mc.idMatriculaCurso " +
-                     "INNER JOIN Matricula m ON mc.idMatricula = m.idMatricula " +
-                     "INNER JOIN Alumno a ON m.idAlumno = a.idAlumno " +
-                     "LEFT JOIN Evaluacion e ON rb.idRegistroBimestral = e.idRegistroBimestral " +
-                     "WHERE m.idGrado = ? AND mc.idCurso = ? AND rb.bimestre = ? " +
-                     "GROUP BY rb.idRegistroBimestral, m.codigoMatricula, a.apellidos, a.nombres";
-
-        return JdbcTemplate.query(conexion, sql, rs -> new Object[] {
-                rs.getInt("idRegistroBimestral"),
-                rs.getString("codigoMatricula"),
-                rs.getString("alumnoNombre"),
-                rs.getDouble("practica"),
-                rs.getDouble("tarea"),
-                rs.getDouble("parcial"),
-                rs.getDouble("bimestral")
-        }, idGrado, idCurso, bimestre);
+            return JdbcTemplate.query(conexion, sql, rs -> new Object[] {
+                rs.getObject("idRegistroBimestral") != null ? rs.getInt("idRegistroBimestral") : 0,
+                rs.getString("codigoMatricula"),  
+                rs.getString("alumnoNombre"),     
+                rs.getString("tipo"),
+                rs.getDouble("nota"), 
+                rs.getString("estado")            
+        }, bimestre, idGrado, idCurso);
     }
 
     @Override
     public List<Object[]> listarAlumnosEnRiesgo(int idGrado, int bimestre) {
         if (conexion == null) return Collections.emptyList();
 
-        String sql = "SELECT a.dni, a.apellidos + ', ' + a.nombres AS alumno, c.nombre AS curso, " +
-                     "       (MAX(CASE WHEN e.tipo = 'PRACTICA' THEN e.nota ELSE 0 END)*0.2 + " +
-                     "        MAX(CASE WHEN e.tipo = 'TAREA' THEN e.nota ELSE 0 END)*0.2 + " +
-                     "        MAX(CASE WHEN e.tipo = 'PARCIAL' THEN e.nota ELSE 0 END)*0.3 + " +
-                     "        MAX(CASE WHEN e.tipo = 'BIMESTRAL' THEN e.nota ELSE 0 END)*0.3) AS promedio " +
-                     "FROM RegistroBimestral rb " +
-                     "INNER JOIN MatriculaCurso mc ON rb.idMatriculaCurso = mc.idMatriculaCurso " +
-                     "INNER JOIN Matricula m ON mc.idMatricula = m.idMatricula " +
-                     "INNER JOIN Alumno a ON m.idAlumno = a.idAlumno " +
-                     "INNER JOIN Curso c ON mc.idCurso = c.idCurso " +
-                     "LEFT JOIN Evaluacion e ON rb.idRegistroBimestral = e.idRegistroBimestral " +
-                     "WHERE m.idGrado = ? AND rb.bimestre = ? " +
-                     "GROUP BY a.dni, a.apellidos, a.nombres, c.nombre " +
-                     "HAVING (MAX(CASE WHEN e.tipo = 'PRACTICA' THEN e.nota ELSE 0 END)*0.2 + " +
-                     "        MAX(CASE WHEN e.tipo = 'TAREA' THEN e.nota ELSE 0 END)*0.2 + " +
-                     "        MAX(CASE WHEN e.tipo = 'PARCIAL' THEN e.nota ELSE 0 END)*0.3 + " +
-                     "        MAX(CASE WHEN e.tipo = 'BIMESTRAL' THEN e.nota ELSE 0 END)*0.3) < ?";
+        String sql = 
+            "SELECT a.dni, " +
+            "       a.apellidos + ', ' + a.nombres AS nombreAlumno, " +
+            "       c.nombre AS curso, " +
+            "       ISNULL(SUM(e.nota * e.peso), 0) AS promedio " +
+            "FROM Matricula m " +
+            "INNER JOIN Alumno a ON m.idAlumno = a.idAlumno " +
+            "INNER JOIN MatriculaCurso mc ON m.idMatricula = mc.idMatricula " +
+            "INNER JOIN Curso c ON mc.idCurso = c.idCurso " +
+            "INNER JOIN RegistroBimestral rb ON mc.idMatriculaCurso = rb.idMatriculaCurso " +
+            "LEFT JOIN Evaluacion e ON rb.idRegistroBimestral = e.idRegistroBimestral " +
+            "WHERE m.idGrado = ? AND rb.bimestre = ? AND m.estado = 'VIGENTE' " +
+            "GROUP BY a.dni, a.apellidos, a.nombres, c.nombre " +
+            "HAVING ISNULL(SUM(e.nota * e.peso), 0) < 12 " +
+            "ORDER BY promedio ASC";
 
-        return JdbcTemplate.query(conexion, sql, rs -> new Object[] {
+        return shared.JdbcTemplate.query(conexion, sql, rs -> new Object[] {
                 rs.getString("dni"),
-                rs.getString("alumno"),
+                rs.getString("nombreAlumno"),
                 rs.getString("curso"),
                 rs.getDouble("promedio")
-        }, idGrado, bimestre, NOTA_MINIMA_APROBATORIA);
+        }, idGrado, bimestre);
     }
 }

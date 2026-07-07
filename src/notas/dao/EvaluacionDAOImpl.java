@@ -24,7 +24,7 @@ public class EvaluacionDAOImpl implements IEvaluacionDAO {
 
     @Override
     public boolean insertar(Evaluacion entidad) {
-        if (conexion == null || entidad == null) return false;
+        if (conexion == null || entidad == null || entidad.getRegistroBimestral() == null) return false;
         String sql = "INSERT INTO Evaluacion (idRegistroBimestral, nombre, tipo, nota, peso) VALUES (?, ?, ?, ?, ?)";
         return JdbcTemplate.update(conexion, sql, 
                 entidad.getRegistroBimestral().getId(), 
@@ -48,14 +48,6 @@ public class EvaluacionDAOImpl implements IEvaluacionDAO {
         return JdbcTemplate.queryForObject(conexion, sql, RowMappers.EVALUACION_ROW_MAPPER, id);
     }
 
-
-    @Override
-    public boolean insertarConCabecera(Evaluacion entidad, Integer idRegistroBimestral) {
-        if (conexion == null || entidad == null || idRegistroBimestral == null) return false;
-        String sql = "INSERT INTO Evaluacion (idRegistroBimestral, nombre, tipo, nota, peso) VALUES (?, ?, ?, ?, ?)";
-        return JdbcTemplate.update(conexion, sql, idRegistroBimestral, entidad.getNombre(), entidad.getTipo().name(), entidad.getNota(), entidad.getPeso()) > 0;
-    }
-
     @Override
     public boolean actualizar(Evaluacion entidad) {
         if (conexion == null || entidad == null || entidad.getId() == null) return false;
@@ -76,4 +68,12 @@ public class EvaluacionDAOImpl implements IEvaluacionDAO {
         String sql = "SELECT idEvaluacion, idRegistroBimestral, nombre, tipo, nota, peso FROM Evaluacion WHERE idRegistroBimestral = ?";
         return JdbcTemplate.query(conexion, sql, RowMappers.EVALUACION_ROW_MAPPER, idRegistroBimestral);
     }
+     @Override
+    public boolean insertarConCabecera(Evaluacion entidad, Integer idRegistroBimestral) {
+        if (conexion == null || entidad == null || idRegistroBimestral == null) return false;
+        String sql = "INSERT INTO Evaluacion (idRegistroBimestral, nombre, tipo, nota, peso) VALUES (?, ?, ?, ?, ?)";
+        return JdbcTemplate.update(conexion, sql, idRegistroBimestral, entidad.getNombre(), entidad.getTipo().name(), entidad.getNota(), entidad.getPeso()) > 0;
+    }
 }
+    
+   

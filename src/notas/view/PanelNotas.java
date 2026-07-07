@@ -5,11 +5,12 @@
 package notas.view;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import notas.controller.RegistroBimestralController;
-import notas.model.Evaluacion;
-import notas.model.RegistroBimestral;
+import plan_estudios.controller.PlanEstudiosController;
 import plan_estudios.model.Curso;
 import plan_estudios.model.Grado;
 
@@ -20,6 +21,7 @@ import plan_estudios.model.Grado;
 public class PanelNotas extends javax.swing.JPanel {
 
     private final RegistroBimestralController notasController;
+    private final PlanEstudiosController planController;
     
     private List<Grado> gradosCargados = new ArrayList<>();
     private List<Curso> cursosCargados = new ArrayList<>();
@@ -30,59 +32,58 @@ public class PanelNotas extends javax.swing.JPanel {
      */
     public PanelNotas() {
         this.notasController = null;
+        this.planController = null;
         initComponents();
         estilizarCabecerasTablas(); 
     }
     
-    public PanelNotas(RegistroBimestralController notasController) {
+    public PanelNotas(RegistroBimestralController notasController, PlanEstudiosController planController) {
         this.notasController = notasController;
+        this.planController = planController;
         initComponents();
         estilizarCabecerasTablas();
-        
-        if (this.notasController != null) {
+        if (this.notasController != null && this.planController != null) {
             cargarFiltrosGrado();
         }
     }
-
+    
     private void cargarFiltrosGrado() {
-        cboGrados.removeAllItems();
-        cboGrados.addItem("-- Seleccione Grado --");
-        cboGrado.removeAllItems();
-        cboGrado.addItem("-- Seleccione Grado --");
         this.gradosCargados.clear();
+        cboGradosRegistro.removeAllItems();
+        cboGradosRegistro.addItem("-- Seleccione Grado --");
+        cboGradoReporte.removeAllItems();
+        cboGradoReporte.addItem("-- Seleccione Grado --");
+        
         try {
-            plan_estudios.controller.GradoController gradoController = new plan_estudios.controller.GradoController();
-            List<Grado> activos = gradoController.obtenerGradosActivos();
+            List<Grado> activos = planController.obtenerGradosActivos(); 
             for (Grado g : activos) {
                 this.gradosCargados.add(g);
-                final String etiqueta = g.getNombre() + " - " + g.getNivel();
-                cboGrados.addItem(etiqueta);
-                cboGrado.addItem(etiqueta);
+                cboGradosRegistro.addItem(g.getNombre() + " - " + g.getNivel());
+                cboGradoReporte.addItem(g.getNombre() + " - " + g.getNivel());
             }
         } catch (Exception e) {
-            System.err.println("Error carga grados: " + e.getMessage());
+            mostrarMensaje("Error al cargar grados: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
     
     private void cargarCursosPorGrado(int idGrado) {
-        cboCurso.removeAllItems();
-        cboCurso.addItem("-- Seleccione Curso --");
         this.cursosCargados.clear();
-        cboCurso.setEnabled(true);
+        cboCursoRegistro.removeAllItems();
+        cboCursoRegistro.addItem("-- Seleccione Curso --");
+        cboCursoRegistro.setEnabled(true);
         btnCargarAlumnos.setEnabled(true);
-        cboBimestre.setEnabled(true);
+        cboBimestreRegistro.setEnabled(true);
 
         try {
-            plan_estudios.controller.CursoController cursoController = new plan_estudios.controller.CursoController();
-            List<Curso> todos = cursoController.obtenerCursos();
+            List<Curso> todos = planController.obtenerCursos(); 
             for (Curso c : todos) {
                 if (c.getGradoAsignado() != null && c.getGradoAsignado().getId() == idGrado) {
                     this.cursosCargados.add(c);
-                    cboCurso.addItem(c.getNombre());
+                    cboCursoRegistro.addItem(c.getNombre());
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error carga cursos: " + e.getMessage());
+            mostrarMensaje("Error al cargar cursos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
     
@@ -101,7 +102,41 @@ public class PanelNotas extends javax.swing.JPanel {
         jScrollPane1.getViewport().setBackground(java.awt.Color.WHITE);
         jScrollPane2.getViewport().setBackground(java.awt.Color.WHITE);
     }
+    
+    public void recargarDatos() {
+        if (notasController == null) return;
+        int idxG = cboGradosRegistro.getSelectedIndex();
+        int idxC = cboCursoRegistro.getSelectedIndex();
+        int idxB = cboBimestreRegistro.getSelectedIndex();
 
+        if (idxG > 0 && idxC > 0 && idxB > 0) {
+            btnCargarAlumnosActionPerformed(null);
+        }
+    }
+
+    public void refrescarTabla(List<Object[]> datos) {
+        DefaultTableModel modelo = (DefaultTableModel) tablaNotas.getModel();
+        modelo.setRowCount(0);
+        idsRegistrosCargados.clear();
+
+        btnAgregarNotas.setText("Agregar Notas");
+        btnCerrarBimestre.setEnabled(false); 
+
+        for (Object[] fila : datos) {
+            idsRegistrosCargados.add((Integer) fila[0]);
+
+            modelo.addRow(new Object[]{ 
+                fila[1], 
+                fila[2], 
+                fila[3],
+                fila[4],
+                fila[5], 
+                fila[6], 
+                fila[7], 
+                fila[8]
+            });
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -123,19 +158,22 @@ public class PanelNotas extends javax.swing.JPanel {
         panelGrado = new javax.swing.JPanel();
         lblGrado = new javax.swing.JLabel();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0));
-        cboGrados = new javax.swing.JComboBox<>();
+        cboGradosRegistro = new javax.swing.JComboBox<>();
         panelCurso = new javax.swing.JPanel();
         lblCurso = new javax.swing.JLabel();
         filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0));
-        cboCurso = new javax.swing.JComboBox<>();
+        cboCursoRegistro = new javax.swing.JComboBox<>();
         panelBimestre = new javax.swing.JPanel();
         lblBimestre = new javax.swing.JLabel();
         filler6 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0));
-        cboBimestre = new javax.swing.JComboBox<>();
+        cboBimestreRegistro = new javax.swing.JComboBox<>();
         filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(40, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
-        btnCargarAlumnos = new javax.swing.JButton();
+        btnCerrarBimestre = new javax.swing.JButton();
+        filler12 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0));
+        btnAgregarNotas = new javax.swing.JButton();
         filler5 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0));
-        btnGuardarNotas = new javax.swing.JButton();
+        btnCargarAlumnos = new javax.swing.JButton();
+        filler10 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(105, 0));
         jScrollPane1 = new javax.swing.JScrollPane();
         tablaNotas = new javax.swing.JTable();
         panelReporteRiesgo = new javax.swing.JPanel();
@@ -143,11 +181,15 @@ public class PanelNotas extends javax.swing.JPanel {
         jPanel9 = new javax.swing.JPanel();
         lblGrado1 = new javax.swing.JLabel();
         filler7 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0));
-        cboGrado = new javax.swing.JComboBox<>();
+        cboGradoReporte = new javax.swing.JComboBox<>();
+        panelCurso1 = new javax.swing.JPanel();
+        lblCurso1 = new javax.swing.JLabel();
+        filler11 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0));
+        cboCursoReporte = new javax.swing.JComboBox<>();
         panelBimestre1 = new javax.swing.JPanel();
         lblBimestre1 = new javax.swing.JLabel();
         filler8 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0), new java.awt.Dimension(10, 0));
-        cboBimestre1 = new javax.swing.JComboBox<>();
+        cboBimestreReporte = new javax.swing.JComboBox<>();
         filler9 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
         btnGenerarReporte = new javax.swing.JButton();
         panelNotasRiesgo = new javax.swing.JPanel();
@@ -157,7 +199,10 @@ public class PanelNotas extends javax.swing.JPanel {
 
         setBackground(new java.awt.Color(255, 255, 255));
         setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setMaximumSize(new java.awt.Dimension(200, 35));
+        setMinimumSize(new java.awt.Dimension(200, 35));
         setOpaque(false);
+        setPreferredSize(new java.awt.Dimension(200, 35));
         setLayout(new java.awt.BorderLayout());
 
         panelPrincipal.setOpaque(false);
@@ -204,22 +249,22 @@ public class PanelNotas extends javax.swing.JPanel {
         panelGrado.add(lblGrado);
         panelGrado.add(filler1);
 
-        cboGrados.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        cboGrados.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(220, 220, 220), 1, true));
-        cboGrados.setMaximumSize(new java.awt.Dimension(70, 35));
-        cboGrados.setMinimumSize(new java.awt.Dimension(70, 35));
-        cboGrados.setPreferredSize(new java.awt.Dimension(70, 35));
-        cboGrados.addItemListener(new java.awt.event.ItemListener() {
+        cboGradosRegistro.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "-- Seleccione Grado --" }));
+        cboGradosRegistro.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(220, 220, 220), 1, true));
+        cboGradosRegistro.setMaximumSize(new java.awt.Dimension(150, 35));
+        cboGradosRegistro.setMinimumSize(new java.awt.Dimension(150, 35));
+        cboGradosRegistro.setPreferredSize(new java.awt.Dimension(150, 35));
+        cboGradosRegistro.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                cboGradosItemStateChanged(evt);
+                cboGradosRegistroItemStateChanged(evt);
             }
         });
-        cboGrados.addActionListener(new java.awt.event.ActionListener() {
+        cboGradosRegistro.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cboGradosActionPerformed(evt);
+                cboGradosRegistroActionPerformed(evt);
             }
         });
-        panelGrado.add(cboGrados);
+        panelGrado.add(cboGradosRegistro);
 
         panelCabecera.add(panelGrado);
 
@@ -234,23 +279,23 @@ public class PanelNotas extends javax.swing.JPanel {
         panelCurso.add(lblCurso);
         panelCurso.add(filler3);
 
-        cboCurso.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        cboCurso.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(220, 220, 220), 1, true));
-        cboCurso.setEnabled(false);
-        cboCurso.setMaximumSize(new java.awt.Dimension(70, 35));
-        cboCurso.setMinimumSize(new java.awt.Dimension(70, 35));
-        cboCurso.setPreferredSize(new java.awt.Dimension(70, 35));
-        cboCurso.addItemListener(new java.awt.event.ItemListener() {
+        cboCursoRegistro.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "-- Seleccione Curso --" }));
+        cboCursoRegistro.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(220, 220, 220), 1, true));
+        cboCursoRegistro.setEnabled(false);
+        cboCursoRegistro.setMaximumSize(new java.awt.Dimension(120, 35));
+        cboCursoRegistro.setMinimumSize(new java.awt.Dimension(120, 35));
+        cboCursoRegistro.setPreferredSize(new java.awt.Dimension(120, 35));
+        cboCursoRegistro.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                cboCursoItemStateChanged(evt);
+                cboCursoRegistroItemStateChanged(evt);
             }
         });
-        cboCurso.addActionListener(new java.awt.event.ActionListener() {
+        cboCursoRegistro.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cboCursoActionPerformed(evt);
+                cboCursoRegistroActionPerformed(evt);
             }
         });
-        panelCurso.add(cboCurso);
+        panelCurso.add(cboCursoRegistro);
 
         panelCabecera.add(panelCurso);
 
@@ -265,26 +310,55 @@ public class PanelNotas extends javax.swing.JPanel {
         panelBimestre.add(lblBimestre);
         panelBimestre.add(filler6);
 
-        cboBimestre.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "-- Seleccione Bimestre --", "Bimestre 1", "Bimestre 2", "Bimestre 3", "Bimestre 4" }));
-        cboBimestre.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(220, 220, 220), 1, true));
-        cboBimestre.setEnabled(false);
-        cboBimestre.setMaximumSize(new java.awt.Dimension(70, 35));
-        cboBimestre.setMinimumSize(new java.awt.Dimension(70, 35));
-        cboBimestre.setPreferredSize(new java.awt.Dimension(70, 35));
-        cboBimestre.addItemListener(new java.awt.event.ItemListener() {
+        cboBimestreRegistro.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "-- Seleccione Bimestre --", "Bimestre 1", "Bimestre 2", "Bimestre 3", "Bimestre 4" }));
+        cboBimestreRegistro.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(220, 220, 220), 1, true));
+        cboBimestreRegistro.setEnabled(false);
+        cboBimestreRegistro.setMaximumSize(new java.awt.Dimension(100, 35));
+        cboBimestreRegistro.setMinimumSize(new java.awt.Dimension(100, 35));
+        cboBimestreRegistro.setPreferredSize(new java.awt.Dimension(100, 35));
+        cboBimestreRegistro.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                cboBimestreItemStateChanged(evt);
+                cboBimestreRegistroItemStateChanged(evt);
             }
         });
-        cboBimestre.addActionListener(new java.awt.event.ActionListener() {
+        cboBimestreRegistro.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cboBimestreActionPerformed(evt);
+                cboBimestreRegistroActionPerformed(evt);
             }
         });
-        panelBimestre.add(cboBimestre);
+        panelBimestre.add(cboBimestreRegistro);
 
         panelCabecera.add(panelBimestre);
         panelCabecera.add(filler2);
+
+        btnCerrarBimestre.setText("Cerrar Bimestre");
+        btnCerrarBimestre.setMaximumSize(new java.awt.Dimension(120, 35));
+        btnCerrarBimestre.setMinimumSize(new java.awt.Dimension(120, 35));
+        btnCerrarBimestre.setPreferredSize(new java.awt.Dimension(120, 35));
+        btnCerrarBimestre.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCerrarBimestreActionPerformed(evt);
+            }
+        });
+        panelCabecera.add(btnCerrarBimestre);
+        panelCabecera.add(filler12);
+
+        btnAgregarNotas.setText("Agregar Notas");
+        btnAgregarNotas.setMaximumSize(new java.awt.Dimension(120, 35));
+        btnAgregarNotas.setMinimumSize(new java.awt.Dimension(120, 35));
+        btnAgregarNotas.setPreferredSize(new java.awt.Dimension(120, 35));
+        btnAgregarNotas.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                btnAgregarNotasMouseClicked(evt);
+            }
+        });
+        btnAgregarNotas.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAgregarNotasActionPerformed(evt);
+            }
+        });
+        panelCabecera.add(btnAgregarNotas);
+        panelCabecera.add(filler5);
 
         btnCargarAlumnos.setText("Cargar Alumnos");
         btnCargarAlumnos.setMaximumSize(new java.awt.Dimension(120, 35));
@@ -296,18 +370,7 @@ public class PanelNotas extends javax.swing.JPanel {
             }
         });
         panelCabecera.add(btnCargarAlumnos);
-        panelCabecera.add(filler5);
-
-        btnGuardarNotas.setText("Guardar Notas");
-        btnGuardarNotas.setMaximumSize(new java.awt.Dimension(120, 35));
-        btnGuardarNotas.setMinimumSize(new java.awt.Dimension(120, 35));
-        btnGuardarNotas.setPreferredSize(new java.awt.Dimension(120, 35));
-        btnGuardarNotas.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnGuardarNotasActionPerformed(evt);
-            }
-        });
-        panelCabecera.add(btnGuardarNotas);
+        panelCabecera.add(filler10);
 
         panelRegistroNotas.add(panelCabecera, java.awt.BorderLayout.NORTH);
 
@@ -317,25 +380,25 @@ public class PanelNotas extends javax.swing.JPanel {
 
         tablaNotas.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null}
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "Código", "Alumno", "Prom. Calificada", "Prom.Tarea académica", "Ex. Parcial", "Ex. Bimestral", "Prom. Bimestre"
+                "Código", "Alumno", "Prom. Calificada", "Prom.Tarea académica", "Ex. Parcial", "Ex. Bimestral", "Prom. Bimestre", "Estado"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false
+                false, false, false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -363,6 +426,7 @@ public class PanelNotas extends javax.swing.JPanel {
             tablaNotas.getColumnModel().getColumn(4).setResizable(false);
             tablaNotas.getColumnModel().getColumn(5).setResizable(false);
             tablaNotas.getColumnModel().getColumn(6).setResizable(false);
+            tablaNotas.getColumnModel().getColumn(7).setResizable(false);
         }
 
         panelRegistroNotas.add(jScrollPane1, java.awt.BorderLayout.CENTER);
@@ -387,23 +451,54 @@ public class PanelNotas extends javax.swing.JPanel {
         jPanel9.add(lblGrado1);
         jPanel9.add(filler7);
 
-        cboGrado.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        cboGrado.setMaximumSize(new java.awt.Dimension(70, 35));
-        cboGrado.setMinimumSize(new java.awt.Dimension(70, 35));
-        cboGrado.setPreferredSize(new java.awt.Dimension(70, 35));
-        cboGrado.addItemListener(new java.awt.event.ItemListener() {
+        cboGradoReporte.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cboGradoReporte.setMaximumSize(new java.awt.Dimension(70, 35));
+        cboGradoReporte.setMinimumSize(new java.awt.Dimension(70, 35));
+        cboGradoReporte.setPreferredSize(new java.awt.Dimension(70, 35));
+        cboGradoReporte.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                cboGradoItemStateChanged(evt);
+                cboGradoReporteItemStateChanged(evt);
             }
         });
-        cboGrado.addActionListener(new java.awt.event.ActionListener() {
+        cboGradoReporte.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cboGradoActionPerformed(evt);
+                cboGradoReporteActionPerformed(evt);
             }
         });
-        jPanel9.add(cboGrado);
+        jPanel9.add(cboGradoReporte);
 
         panelCabecera1.add(jPanel9);
+
+        panelCurso1.setOpaque(false);
+        panelCurso1.setLayout(new javax.swing.BoxLayout(panelCurso1, javax.swing.BoxLayout.LINE_AXIS));
+
+        lblCurso1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblCurso1.setText("Curso");
+        lblCurso1.setMaximumSize(new java.awt.Dimension(50, 30));
+        lblCurso1.setMinimumSize(new java.awt.Dimension(50, 30));
+        lblCurso1.setPreferredSize(new java.awt.Dimension(50, 30));
+        panelCurso1.add(lblCurso1);
+        panelCurso1.add(filler11);
+
+        cboCursoReporte.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cboCursoReporte.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(220, 220, 220), 1, true));
+        cboCursoReporte.setEnabled(false);
+        cboCursoReporte.setMaximumSize(new java.awt.Dimension(70, 35));
+        cboCursoReporte.setMinimumSize(new java.awt.Dimension(70, 35));
+        cboCursoReporte.setPreferredSize(new java.awt.Dimension(70, 35));
+        cboCursoReporte.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cboCursoReporteItemStateChanged(evt);
+            }
+        });
+        cboCursoReporte.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboCursoReporteActionPerformed(evt);
+            }
+        });
+        panelCurso1.add(cboCursoReporte);
+
+        panelCabecera1.add(panelCurso1);
 
         panelBimestre1.setOpaque(false);
         panelBimestre1.setLayout(new javax.swing.BoxLayout(panelBimestre1, javax.swing.BoxLayout.LINE_AXIS));
@@ -416,21 +511,22 @@ public class PanelNotas extends javax.swing.JPanel {
         panelBimestre1.add(lblBimestre1);
         panelBimestre1.add(filler8);
 
-        cboBimestre1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "-- Seleccione Bimestre --", "Bimestre 1", "Bimestre 2", "Bimestre 3", "Bimestre 4" }));
-        cboBimestre1.setMaximumSize(new java.awt.Dimension(70, 35));
-        cboBimestre1.setMinimumSize(new java.awt.Dimension(50, 35));
-        cboBimestre1.setPreferredSize(new java.awt.Dimension(70, 35));
-        cboBimestre1.addItemListener(new java.awt.event.ItemListener() {
+        cboBimestreReporte.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "-- Seleccione Bimestre --", "Bimestre 1", "Bimestre 2", "Bimestre 3", "Bimestre 4" }));
+        cboBimestreReporte.setEnabled(false);
+        cboBimestreReporte.setMaximumSize(new java.awt.Dimension(70, 35));
+        cboBimestreReporte.setMinimumSize(new java.awt.Dimension(50, 35));
+        cboBimestreReporte.setPreferredSize(new java.awt.Dimension(70, 35));
+        cboBimestreReporte.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                cboBimestre1ItemStateChanged(evt);
+                cboBimestreReporteItemStateChanged(evt);
             }
         });
-        cboBimestre1.addActionListener(new java.awt.event.ActionListener() {
+        cboBimestreReporte.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cboBimestre1ActionPerformed(evt);
+                cboBimestreReporteActionPerformed(evt);
             }
         });
-        panelBimestre1.add(cboBimestre1);
+        panelBimestre1.add(cboBimestreReporte);
 
         panelCabecera1.add(panelBimestre1);
         panelCabecera1.add(filler9);
@@ -513,7 +609,7 @@ public class PanelNotas extends javax.swing.JPanel {
         panelInferior.setLayout(panelInferiorLayout);
         panelInferiorLayout.setHorizontalGroup(
             panelInferiorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 700, Short.MAX_VALUE)
+            .addGap(0, 974, Short.MAX_VALUE)
         );
         panelInferiorLayout.setVerticalGroup(
             panelInferiorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -525,192 +621,183 @@ public class PanelNotas extends javax.swing.JPanel {
         add(panelPrincipal, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void cboGradosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboGradosActionPerformed
+    private void cboGradosRegistroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboGradosRegistroActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_cboGradosActionPerformed
+    }//GEN-LAST:event_cboGradosRegistroActionPerformed
 
-    private void cboCursoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboCursoActionPerformed
+    private void cboCursoRegistroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboCursoRegistroActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_cboCursoActionPerformed
+    }//GEN-LAST:event_cboCursoRegistroActionPerformed
 
-    private void cboBimestreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboBimestreActionPerformed
+    private void cboBimestreRegistroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboBimestreRegistroActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_cboBimestreActionPerformed
+    }//GEN-LAST:event_cboBimestreRegistroActionPerformed
 
-    private void cboGradoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboGradoActionPerformed
+    private void cboGradoReporteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboGradoReporteActionPerformed
+        
+    }//GEN-LAST:event_cboGradoReporteActionPerformed
 
-    }//GEN-LAST:event_cboGradoActionPerformed
-
-    private void cboBimestre1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboBimestre1ActionPerformed
+    private void cboBimestreReporteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboBimestreReporteActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_cboBimestre1ActionPerformed
+    }//GEN-LAST:event_cboBimestreReporteActionPerformed
 
     private void btnCargarAlumnosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCargarAlumnosActionPerformed
-    if (notasController == null) return;
+        if (notasController == null) return;
  
-        int idxG = cboGrados.getSelectedIndex();
-        int idxC = cboCurso.getSelectedIndex();
-        int idxB = cboBimestre.getSelectedIndex();
- 
+        int idxG = cboGradosRegistro.getSelectedIndex();
+        int idxC = cboCursoRegistro.getSelectedIndex();
+        int idxB = cboBimestreRegistro.getSelectedIndex();
+
         if (idxG <= 0 || idxC <= 0 || idxB <= 0) {
-            mostrarMensaje("Seleccione Grado, Curso y Bimestre.", "Filtros", javax.swing.JOptionPane.WARNING_MESSAGE);
+            mostrarMensaje("Seleccione un Grado, Curso y Bimestre válidos.", "Filtros", JOptionPane.WARNING_MESSAGE);
             return;
         }
- 
+
         Integer idGrado = gradosCargados.get(idxG - 1).getId();
         Integer idCurso = cursosCargados.get(idxC - 1).getId();
-        
+
         try {
-       
             List<Object[]> filasProcesadas = notasController.obtenerNotasParaGrilla(idGrado, idCurso, idxB);
-            
-           
-            DefaultTableModel modelo = (DefaultTableModel) tablaNotas.getModel();
-            modelo.setRowCount(0);
-            idsRegistrosCargados.clear();
-            
-           
-            for (Object[] fila : filasProcesadas) {
-                idsRegistrosCargados.add((Integer) fila[0]);
-                modelo.addRow(new Object[]{ fila[1], fila[2], fila[3], fila[4], fila[5], fila[6], fila[7] });
-            }
+            refrescarTabla(filasProcesadas);
         } catch (Exception ex) {
-            mostrarMensaje(ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            mostrarMensaje("Error al cargar alumnos: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnCargarAlumnosActionPerformed
     
-    private void btnGuardarNotasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarNotasActionPerformed
-        if (notasController == null) return;
- 
-        DefaultTableModel modelo = (DefaultTableModel) tablaNotas.getModel();
-        if (modelo.getRowCount() == 0) return;
- 
-        List<RegistroBimestral> modificados = new ArrayList<>();
-        
-        try {
-            for (int i = 0; i < modelo.getRowCount(); i++) {
-                RegistroBimestral rb = new RegistroBimestral();
-                rb.setId(idsRegistrosCargados.get(i));
-                rb.setActivo(true);
- 
-                rb.getEvaluaciones().add(new Evaluacion(null, null, "PRACTICA", shared.TipoEvaluacion.PRACTICA, 
-                        Double.parseDouble(modelo.getValueAt(i, 2).toString()), shared.TipoEvaluacion.PRACTICA.getPeso()));
-                
-                rb.getEvaluaciones().add(new Evaluacion(null, null, "TAREA", shared.TipoEvaluacion.TAREA, 
-                        Double.parseDouble(modelo.getValueAt(i, 3).toString()), shared.TipoEvaluacion.TAREA.getPeso()));
-                
-                rb.getEvaluaciones().add(new Evaluacion(null, null, "PARCIAL", shared.TipoEvaluacion.PARCIAL, 
-                        Double.parseDouble(modelo.getValueAt(i, 4).toString()), shared.TipoEvaluacion.PARCIAL.getPeso()));
-                
-                rb.getEvaluaciones().add(new Evaluacion(null, null, "BIMESTRAL", shared.TipoEvaluacion.BIMESTRAL, 
-                        Double.parseDouble(modelo.getValueAt(i, 5).toString()), shared.TipoEvaluacion.BIMESTRAL.getPeso()));
- 
-                modificados.add(rb);
-            }
-          
-            notasController.procesarActualizacionMasivaNotas(modificados);
-            
-            mostrarMensaje("¡Calificaciones guardadas con éxito!", "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            
-            btnCargarAlumnosActionPerformed(null);
-            
-        } catch (Exception e) {
-            mostrarMensaje("Error al guardar: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-        }
-    }//GEN-LAST:event_btnGuardarNotasActionPerformed
-
-    private void btnGenerarReporteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerarReporteActionPerformed
-        if (notasController == null) return;
- 
-        int indexGrado = cboGrado.getSelectedIndex();
-        int indexBimestre = cboBimestre1.getSelectedIndex();
- 
-        if (indexGrado <= 0 || indexBimestre <= 0) {
-            mostrarMensaje("Seleccione Grado y Bimestre para el reporte analítico.", "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
+    private void btnCerrarBimestreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarBimestreActionPerformed
+        int fila = tablaNotas.getSelectedRow();
+        if (fila == -1) {
+            mostrarMensaje("Seleccione un alumno primero.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
- 
-        Integer idGradoReal = gradosCargados.get(indexGrado - 1).getId();
-        
-        try {
-            List<Object[]> reporteRiesgo = notasController.obtenerReporteRiesgo(idGradoReal, indexBimestre);
-            
-            DefaultTableModel modeloRiesgo = (DefaultTableModel) tablaNotasRiesgo.getModel();
-            modeloRiesgo.setRowCount(0);
-            
-            for (Object[] fila : reporteRiesgo) {
-                modeloRiesgo.addRow(fila);
+
+        Integer idRegistro = idsRegistrosCargados.get(fila);
+        int confirm = JOptionPane.showConfirmDialog(this, "¿Está seguro de cerrar este bimestre?", "Confirmar", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                notasController.cerrarBimestre(idRegistro);
+                mostrarMensaje("Bimestre cerrado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                btnCargarAlumnosActionPerformed(null);
+            } catch (Exception e) {
+                mostrarMensaje("Error al cerrar: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
-            
-            mostrarMensaje("Reporte completado. Se hallaron " + reporteRiesgo.size() + " alertas académicas.", "SAD Reportes", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            
-        } catch (Exception ex) {
-            mostrarMensaje(ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
         }
+    }//GEN-LAST:event_btnCerrarBimestreActionPerformed
+
+    private void btnGenerarReporteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerarReporteActionPerformed
+        int indexGrado = cboGradoReporte.getSelectedIndex();
+    int indexBimestre = cboBimestreReporte.getSelectedIndex();
+
+    if (indexGrado <= 0 || indexBimestre <= 0) {
+        mostrarMensaje("Seleccione un Grado y un Bimestre para generar el reporte.", "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    Integer idGradoReal = gradosCargados.get(indexGrado - 1).getId();
+    
+    try {
+        List<Object[]> reporteRiesgo = notasController.obtenerReporteRiesgo(idGradoReal, indexBimestre);
+        DefaultTableModel modeloRiesgo = (DefaultTableModel) tablaNotasRiesgo.getModel();
+        modeloRiesgo.setRowCount(0);
+        
+        if (reporteRiesgo.isEmpty()) {
+            mostrarMensaje("¡Excelente! No hay alumnos en riesgo académico para este grado y bimestre.", "Reporte Limpio", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        for (Object[] fila : reporteRiesgo) {
+            modeloRiesgo.addRow(new Object[]{ fila[0], fila[1], fila[2], fila[3], "CRÍTICO" });
+        }
+    } catch (Exception ex) {
+        mostrarMensaje("Error al generar el reporte: " + ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+    }
     }//GEN-LAST:event_btnGenerarReporteActionPerformed
 
-    private void cboGradosItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboGradosItemStateChanged
-        if (evt.getStateChange() == java.awt.event.ItemEvent.SELECTED) {
-            
-            if (cboGrados.getSelectedIndex() > 0) {
-                // Restamos 1 porque la lista gradosCargados no tiene el item "-- Seleccione --"
-                int idGradoSeleccionado = gradosCargados.get(cboGrados.getSelectedIndex() - 1).getId();
-                cargarCursosPorGrado(idGradoSeleccionado);
+    private void cboGradosRegistroItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboGradosRegistroItemStateChanged
+            if (evt.getStateChange() == java.awt.event.ItemEvent.SELECTED) {
+            if (cboGradosRegistro.getSelectedIndex() > 0) {
+                int idGrado = gradosCargados.get(cboGradosRegistro.getSelectedIndex() - 1).getId();
+                cargarCursosPorGrado(idGrado);
             } else {
-                cboCurso.removeAllItems();
-                cboCurso.addItem("-- Seleccione Curso --");
-                cboCurso.setEnabled(false);
-                cboBimestre.setEnabled(false);
+                cboCursoRegistro.setEnabled(false);
+                cboBimestreRegistro.setEnabled(false);
                 btnCargarAlumnos.setEnabled(false);
             }
         }
-    }//GEN-LAST:event_cboGradosItemStateChanged
+    }//GEN-LAST:event_cboGradosRegistroItemStateChanged
 
-    private void cboCursoItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboCursoItemStateChanged
+    private void cboCursoRegistroItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboCursoRegistroItemStateChanged
         // TODO add your handling code here:
-    }//GEN-LAST:event_cboCursoItemStateChanged
+    }//GEN-LAST:event_cboCursoRegistroItemStateChanged
 
-    private void cboBimestreItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboBimestreItemStateChanged
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cboBimestreItemStateChanged
+    private void cboBimestreRegistroItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboBimestreRegistroItemStateChanged
+        boolean listo = cboGradosRegistro.getSelectedIndex() > 0 && cboCursoRegistro.getSelectedIndex() > 0 && cboBimestreRegistro.getSelectedIndex() > 0;
+        btnCargarAlumnos.setEnabled(listo);
+    }//GEN-LAST:event_cboBimestreRegistroItemStateChanged
 
-    private void cboGradoItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboGradoItemStateChanged
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cboGradoItemStateChanged
+    private void cboGradoReporteItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboGradoReporteItemStateChanged
+       if (evt.getStateChange() == java.awt.event.ItemEvent.SELECTED) {
+           cboBimestreReporte.setEnabled(cboGradoReporte.getSelectedIndex() > 0);
+       }
+    }//GEN-LAST:event_cboGradoReporteItemStateChanged
 
-    private void cboBimestre1ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboBimestre1ItemStateChanged
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cboBimestre1ItemStateChanged
+    private void cboBimestreReporteItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboBimestreReporteItemStateChanged
+       boolean listo = cboGradoReporte.getSelectedIndex() > 0 && cboBimestreReporte.getSelectedIndex() > 0;
+       btnGenerarReporte.setEnabled(listo);
+    }//GEN-LAST:event_cboBimestreReporteItemStateChanged
 
     private void tablaNotasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablaNotasMouseClicked
-        if (evt.getClickCount() == 2) {
-            int filaSeleccionada = tablaNotas.getSelectedRow();
-            
-            if (filaSeleccionada >= 0) {
-                String nombreAlumno = tablaNotas.getValueAt(filaSeleccionada, 1).toString();
-                String cursoSeleccionado = cboCurso.getSelectedItem().toString();
-                String bimestreSeleccionado = cboBimestre.getSelectedItem().toString();
-                
-                Integer idRegistroSeleccionado = idsRegistrosCargados.get(filaSeleccionada);
-                
-                java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
-                
-                DialogDetalleNotas dialog = new DialogDetalleNotas(
-                        (java.awt.Frame) parentWindow, 
-                        true, 
-                        this.notasController, 
-                        idRegistroSeleccionado, 
-                        nombreAlumno, 
-                        cursoSeleccionado,
-                        bimestreSeleccionado
-                );
-                
-                dialog.setVisible(true);
-                
-                btnCargarAlumnosActionPerformed(null);
-            }
+        int fila = tablaNotas.getSelectedRow();
+        if (fila == -1) return;
+
+        Object valorEstado = tablaNotas.getValueAt(fila, 7);
+        String estado = (valorEstado != null) ? valorEstado.toString() : "ABIERTO";
+        if ("CERRADO".equalsIgnoreCase(estado)) {
+            btnAgregarNotas.setText("Ver Notas");
+            btnCerrarBimestre.setEnabled(false);
+        } else {
+            btnAgregarNotas.setText("Agregar Notas");
+            btnCerrarBimestre.setEnabled(true);
         }
     }//GEN-LAST:event_tablaNotasMouseClicked
+
+    private void btnAgregarNotasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarNotasActionPerformed
+        int fila = tablaNotas.getSelectedRow();
+        if (fila == -1) {
+            mostrarMensaje("Seleccione un alumno primero.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String nombreAlumno = tablaNotas.getValueAt(fila, 1).toString();
+        Integer idRegistro = idsRegistrosCargados.get(fila);
+        String curso = cboCursoRegistro.getSelectedItem().toString();
+        String bimestre = cboBimestreRegistro.getSelectedItem().toString();
+
+        String estadoStr = tablaNotas.getValueAt(fila, 7).toString();
+        boolean esActivo = "ABIERTO".equalsIgnoreCase(estadoStr);
+
+        java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(this);
+
+        DialogDetalleNotas dialog = new DialogDetalleNotas(
+                (java.awt.Frame) parentWindow, true, this.notasController,
+                idRegistro, nombreAlumno, curso, bimestre, esActivo
+        );
+        dialog.setVisible(true);
+        btnCargarAlumnosActionPerformed(null);
+    }//GEN-LAST:event_btnAgregarNotasActionPerformed
+
+    private void cboCursoReporteItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboCursoReporteItemStateChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cboCursoReporteItemStateChanged
+
+    private void cboCursoReporteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboCursoReporteActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cboCursoReporteActionPerformed
+
+    private void btnAgregarNotasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAgregarNotasMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnAgregarNotasMouseClicked
     
     public javax.swing.JTable getTablaNotas() { 
         return tablaNotas; 
@@ -719,9 +806,9 @@ public class PanelNotas extends javax.swing.JPanel {
     public javax.swing.JTable getTablaNotasRiesgo() { 
         return tablaNotasRiesgo;
     }
- 
-    public List<Integer> getIdsRegistrosCargados() { 
-        return idsRegistrosCargados; 
+    
+    public List<Integer> getIdsRegistrosCargados() {
+        return Collections.unmodifiableList(idsRegistrosCargados);
     }
  
     public void mostrarMensaje(String msg, String tit, int tipo) { 
@@ -730,15 +817,20 @@ public class PanelNotas extends javax.swing.JPanel {
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnAgregarNotas;
     private javax.swing.JButton btnCargarAlumnos;
+    private javax.swing.JButton btnCerrarBimestre;
     private javax.swing.JButton btnGenerarReporte;
-    private javax.swing.JButton btnGuardarNotas;
-    private javax.swing.JComboBox<String> cboBimestre;
-    private javax.swing.JComboBox<String> cboBimestre1;
-    private javax.swing.JComboBox<String> cboCurso;
-    private javax.swing.JComboBox<String> cboGrado;
-    private javax.swing.JComboBox<String> cboGrados;
+    private javax.swing.JComboBox<String> cboBimestreRegistro;
+    private javax.swing.JComboBox<String> cboBimestreReporte;
+    private javax.swing.JComboBox<String> cboCursoRegistro;
+    private javax.swing.JComboBox<String> cboCursoReporte;
+    private javax.swing.JComboBox<String> cboGradoReporte;
+    private javax.swing.JComboBox<String> cboGradosRegistro;
     private javax.swing.Box.Filler filler1;
+    private javax.swing.Box.Filler filler10;
+    private javax.swing.Box.Filler filler11;
+    private javax.swing.Box.Filler filler12;
     private javax.swing.Box.Filler filler2;
     private javax.swing.Box.Filler filler3;
     private javax.swing.Box.Filler filler4;
@@ -754,6 +846,7 @@ public class PanelNotas extends javax.swing.JPanel {
     private javax.swing.JLabel lblBimestre;
     private javax.swing.JLabel lblBimestre1;
     private javax.swing.JLabel lblCurso;
+    private javax.swing.JLabel lblCurso1;
     private javax.swing.JLabel lblGrado;
     private javax.swing.JLabel lblGrado1;
     private javax.swing.JLabel nombrePanel;
@@ -763,6 +856,7 @@ public class PanelNotas extends javax.swing.JPanel {
     private javax.swing.JPanel panelCabecera1;
     private javax.swing.JPanel panelCentral;
     private javax.swing.JPanel panelCurso;
+    private javax.swing.JPanel panelCurso1;
     private javax.swing.JPanel panelGrado;
     private javax.swing.JPanel panelInferior;
     private javax.swing.JPanel panelNombre;
