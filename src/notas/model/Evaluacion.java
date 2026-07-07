@@ -30,6 +30,16 @@ public class Evaluacion {
         this.nota = validarNota(nota);
         this.peso = validarPeso(peso);
     }
+    
+    public Evaluacion(Evaluacion otraEvaluacion) {
+        this.id = otraEvaluacion.id;
+        this.registroBimestral = otraEvaluacion.registroBimestral;
+        this.nombre = otraEvaluacion.nombre;
+        this.tipo = otraEvaluacion.tipo;
+        this.nota = otraEvaluacion.nota;
+        this.peso = otraEvaluacion.peso;
+    }
+    
 
     private Integer validarIdEvaluacion(Integer nuevoId, Integer idActual) {
         if (nuevoId != null && nuevoId <= 0) {

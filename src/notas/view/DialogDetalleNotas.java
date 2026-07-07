@@ -25,27 +25,47 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
     private final RegistroBimestralController controller;
     private final Integer idRegistroBimestralActual;
     private List<Evaluacion> evaluacionesActuales;
+    private boolean esBimestreActivo = true;
     
     /**
      * Creates new form DialogDetalleAlumno
      * @param parent
      * @param modal
+     * @param controller
+     * @param idRegistro
      * @param nombreAlumno
-     * @param gradoAlumno
+     * @param curso
+     * @param bimestre
+     * @param esActivo
      */
-    public DialogDetalleNotas(java.awt.Frame parent, boolean modal, RegistroBimestralController controller, 
-                              Integer idRegistro, String nombreAlumno, String curso, String bimestre) {
+    public DialogDetalleNotas(java.awt.Frame parent, boolean modal, RegistroBimestralController controller,
+                          Integer idRegistro, String nombreAlumno, String curso, String bimestre, boolean esActivo) {
         super(parent, modal);
         initComponents();
         this.setLocationRelativeTo(parent);
         this.controller = controller;
         this.idRegistroBimestralActual = idRegistro;
-        
+        this.esBimestreActivo = esActivo;
+
         lblNombrePanel.setText("Detalle de Evaluaciones");
         lblNombreAlumno.setText("Alumno: " + nombreAlumno);
         lblGradoAlumno.setText("Curso: " + curso + " | " + bimestre);
-        
+
         cargarEvaluaciones();
+
+        if (!this.esBimestreActivo) {
+            btnGuardarNotas.setEnabled(false);
+            btnAgregarNota.setEnabled(false);
+            btnEliminarNota.setEnabled(false);
+
+            if (jPanel1 != null) {
+                jPanel1.setEnabled(false);
+            }
+
+            lblNombrePanel.setText("Detalle de Evaluaciones - [BIMESTRE CERRADO]");
+
+            panelDatosAlumnoRiesgo.setDefaultEditor(Object.class, null);
+        }
     }
     
     private void cargarEvaluaciones() {
@@ -80,6 +100,8 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
         lblNombreAlumno = new javax.swing.JLabel();
         lblGradoAlumno = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
+        btnEliminarNota = new javax.swing.JButton();
+        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0), new java.awt.Dimension(15, 0));
         btnAgregarNota = new javax.swing.JButton();
         panelCentral = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -117,6 +139,18 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
         panelSuperior.add(panelNombre, java.awt.BorderLayout.WEST);
 
         jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.X_AXIS));
+
+        btnEliminarNota.setText("Eliminar Nota");
+        btnEliminarNota.setMaximumSize(new java.awt.Dimension(120, 35));
+        btnEliminarNota.setMinimumSize(new java.awt.Dimension(120, 35));
+        btnEliminarNota.setPreferredSize(new java.awt.Dimension(120, 35));
+        btnEliminarNota.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEliminarNotaActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btnEliminarNota);
+        jPanel1.add(filler2);
 
         btnAgregarNota.setText("Agregar Nota");
         btnAgregarNota.setMaximumSize(new java.awt.Dimension(120, 35));
@@ -206,43 +240,47 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnGuardarNotasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarNotasActionPerformed
-        DefaultTableModel modelo = (DefaultTableModel) panelDatosAlumnoRiesgo.getModel();
-        List<Evaluacion> cambios = new ArrayList<>();
+    if (panelDatosAlumnoRiesgo.isEditing()) {
+        panelDatosAlumnoRiesgo.getCellEditor().stopCellEditing();
+    }
 
-        try {
-            for (int i = 0; i < modelo.getRowCount(); i++) {
-                Object valorNota = modelo.getValueAt(i, 2);
-                if (valorNota == null || valorNota.toString().trim().isEmpty()) continue;
-                
-                double nuevaNota = Double.parseDouble(valorNota.toString());
-                String nombreEvalTabla = modelo.getValueAt(i, 1).toString(); // El nombre (que ahora debe ser editable)
-                
-                boolean encontrada = false;
-                for (Evaluacion e : evaluacionesActuales) {
-                    if (e.getNombre().equals(nombreEvalTabla)) {
-                        e.setNota(nuevaNota); 
-                        cambios.add(e);
-                        encontrada = true;
-                        break;
-                    }
-                }
-                
-                if (!encontrada) {
-                    shared.TipoEvaluacion tipoEval = (shared.TipoEvaluacion) modelo.getValueAt(i, 0);
-                    Evaluacion nueva = new Evaluacion(null, null, nombreEvalTabla, tipoEval, nuevaNota, tipoEval.getPeso());
-                    cambios.add(nueva);
+    DefaultTableModel modelo = (DefaultTableModel) panelDatosAlumnoRiesgo.getModel();
+    List<Evaluacion> cambios = new ArrayList<>();
+
+    try {
+        for (int i = 0; i < modelo.getRowCount(); i++) {
+            Object valorNota = modelo.getValueAt(i, 2);
+            if (valorNota == null || valorNota.toString().trim().isEmpty()) continue;
+            
+            double nuevaNota = Double.parseDouble(valorNota.toString());
+            String nombreEvalTabla = modelo.getValueAt(i, 1).toString();
+            
+            boolean encontrada = false;
+            for (Evaluacion e : evaluacionesActuales) {
+                if (e.getNombre().equals(nombreEvalTabla)) {
+                    e.setNota(nuevaNota); 
+                    cambios.add(e);
+                    encontrada = true;
+                    break;
                 }
             }
             
-            controller.guardarEvaluacionesDetalle(idRegistroBimestralActual, cambios);
-            
-            JOptionPane.showMessageDialog(this, "Notas guardadas correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            this.dispose();
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Por favor ingrese un número válido en la columna Nota.", "Error de Formato", JOptionPane.WARNING_MESSAGE);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error al guardar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            if (!encontrada) {
+                shared.TipoEvaluacion tipoEval = (shared.TipoEvaluacion) modelo.getValueAt(i, 0);
+                Evaluacion nueva = new Evaluacion(null, null, nombreEvalTabla, tipoEval, nuevaNota, tipoEval.getPeso());
+                cambios.add(nueva);
+            }
         }
+        
+        controller.guardarEvaluacionesDetalle(idRegistroBimestralActual, cambios);
+        
+        JOptionPane.showMessageDialog(this, "Notas guardadas correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        this.dispose();
+    } catch (NumberFormatException ex) {
+        JOptionPane.showMessageDialog(this, "Por favor ingrese un número válido en la columna Nota.", "Error de Formato", JOptionPane.WARNING_MESSAGE);
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(this, "Error al guardar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    }
     }//GEN-LAST:event_btnGuardarNotasActionPerformed
 
     private void btnCerrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarActionPerformed
@@ -275,6 +313,35 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
         }
     }//GEN-LAST:event_btnAgregarNotaActionPerformed
 
+    private void btnEliminarNotaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarNotaActionPerformed
+        int fila = panelDatosAlumnoRiesgo.getSelectedRow();
+    if (fila == -1) {
+        JOptionPane.showMessageDialog(this, "Seleccione la evaluación que desea eliminar de la tabla.", "Aviso", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    int confirm = JOptionPane.showConfirmDialog(this, "¿Está seguro de eliminar esta evaluación? Esto recalculará el promedio.", "Confirmar Eliminación", JOptionPane.YES_NO_OPTION);
+    if (confirm != JOptionPane.YES_OPTION) return;
+
+    try {
+        Evaluacion evalAEliminar = evaluacionesActuales.get(fila);
+
+        if (evalAEliminar.getId() != null) {
+            controller.eliminarEvaluacion(evalAEliminar.getId(), idRegistroBimestralActual);
+        }
+
+        evaluacionesActuales.remove(fila);
+
+        DefaultTableModel modelo = (DefaultTableModel) panelDatosAlumnoRiesgo.getModel();
+        modelo.removeRow(fila);
+
+        JOptionPane.showMessageDialog(this, "Evaluación eliminada correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(this, "Error al eliminar la nota: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    }//GEN-LAST:event_btnEliminarNotaActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -291,8 +358,10 @@ public class DialogDetalleNotas extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAgregarNota;
     private javax.swing.JButton btnCerrar;
+    private javax.swing.JButton btnEliminarNota;
     private javax.swing.JButton btnGuardarNotas;
     private javax.swing.Box.Filler filler1;
+    private javax.swing.Box.Filler filler2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblGradoAlumno;

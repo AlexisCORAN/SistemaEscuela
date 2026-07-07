@@ -93,17 +93,13 @@ public class CursoDAOImpl implements ICursoDAO {
     }
 
     @Override
-    public List<Curso> listarPorGrado(final Integer idGrado) {
+    public List<Curso> listarPorEstado(boolean activo) {
         if (conexion == null) return Collections.emptyList();
-        final String sql = SELECT_BASE + " WHERE C.idGrado = ?";
-        return JdbcTemplate.query(conexion, sql, RowMappers.CURSO_ROW_MAPPER, idGrado);
-    }
 
-    @Override
-    public List<Curso> listarPorDocente(final Integer idDocente) {
-        if (conexion == null) return Collections.emptyList();
-        final String sql = SELECT_BASE + " WHERE C.idDocente = ?";
-        return JdbcTemplate.query(conexion, sql, RowMappers.CURSO_ROW_MAPPER, idDocente);
+        final String estadoDb = activo ? "ACTIVO" : "INACTIVO";
+        final String sql = SELECT_BASE + " WHERE C.estado = ?";
+
+        return JdbcTemplate.query(conexion, sql, RowMappers.CURSO_ROW_MAPPER, estadoDb);
     }
 
     @Override

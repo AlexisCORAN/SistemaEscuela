@@ -7,19 +7,20 @@ import alumnos.controller.AlumnoController;
 import docentes.controller.DocenteController;
 import matricula.controller.MatriculaController;
 import notas.controller.RegistroBimestralController;
-import plan_estudios.controller.CursoController;
+import plan_estudios.controller.PlanEstudiosController;
+import shared.IDataListener;
 
 /**
  *
  * @author Alexis
  */
-public class VentanaPrincipal extends javax.swing.JFrame {
+public class VentanaPrincipal extends javax.swing.JFrame  implements IDataListener{
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(VentanaPrincipal.class.getName());
     private final AlumnoController alumnoController;
     private final DocenteController docenteController;
     private final MatriculaController matriculaController;
-    private final CursoController planEstudiosController;
+    private final PlanEstudiosController planEstudiosController;
     private final RegistroBimestralController notasController;
     /**
      * Creates new form VentanaPrincipal
@@ -28,12 +29,23 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         this.alumnoController = new AlumnoController();
         this.docenteController = new DocenteController();
         this.matriculaController = new MatriculaController();
-        this.planEstudiosController = new CursoController();
+        this.planEstudiosController = new PlanEstudiosController();
         this.notasController = new RegistroBimestralController();
         initComponents();
 
         this.setLocationRelativeTo(null);
-    }   
+    }
+    
+    
+    @Override
+    public void onDataChanged() {
+        if (panelAlumnos1 != null) panelAlumnos1.recargarDatos();
+        if (panelDocentes1 != null) panelDocentes1.recargarDatos();
+        if (panelPlanEstudios1 != null) panelPlanEstudios1.recargarDatos();
+        if (panelMatricula1 != null) panelMatricula1.recargarDatos();
+        if (panelNotas1 != null) panelNotas1.recargarDatos();
+        System.out.println("Los datos cambiaron, paneles actualizados.");
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -63,8 +75,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         panelAlumnos1 = new alumnos.view.PanelAlumnos(alumnoController);
         panelDocentes1 = new docentes.view.PanelDocentes(docenteController);
         panelMatricula1 = new matricula.view.PanelMatricula(matriculaController);
-        panelPlanEstudios1 = new plan_estudios.view.PanelPlanEstudios(planEstudiosController);
-        panelNotas1 = new notas.view.PanelNotas(notasController);
+        panelPlanEstudios1 = new plan_estudios.view.PanelPlanEstudios(planEstudiosController, docenteController);
+        panelNotas1 = new notas.view.PanelNotas(notasController, planEstudiosController);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -101,6 +113,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             }
         });
         panelBotones.add(btnAlumnos);
+        btnAlumnos.getAccessibleContext().setAccessibleName("ALUMNOS");
+
         panelBotones.add(filler2);
 
         btnDocentes.setText("Docentes");
@@ -115,6 +129,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             }
         });
         panelBotones.add(btnDocentes);
+        btnDocentes.getAccessibleContext().setAccessibleName("DOCENTES");
+
         panelBotones.add(filler3);
 
         btnMatricula.setText("Matrícula");
@@ -129,6 +145,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             }
         });
         panelBotones.add(btnMatricula);
+        btnMatricula.getAccessibleContext().setAccessibleName("MATRICULA");
+
         panelBotones.add(filler4);
 
         btnPlanEstudios.setText("Plan de Estudios");
@@ -159,6 +177,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             }
         });
         panelBotones.add(btnNotas);
+        btnNotas.getAccessibleContext().setAccessibleName("NOTAS");
 
         panelSuperior.add(panelBotones, java.awt.BorderLayout.CENTER);
 
@@ -241,4 +260,6 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JPanel panelSidebar;
     private javax.swing.JPanel panelSuperior;
     // End of variables declaration//GEN-END:variables
+
+    
 }

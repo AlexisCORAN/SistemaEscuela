@@ -14,6 +14,7 @@ public interface IDocenteDAO extends CrudDAO<Docente>{
     String obtenerUltimoCodigo();
     Docente buscarPorCodigo(String codigo);
     List<Docente> listarPorEspecialidad(String especialidadAcademica);
-    List<Docente> listarActivos();
+    List<Docente> listarPorEstado(boolean activo);
+    boolean existeDni(String dni, Integer idExcluido);
 
 }

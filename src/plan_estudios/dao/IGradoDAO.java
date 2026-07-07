@@ -14,6 +14,5 @@ import shared.CrudDAO;
 public interface IGradoDAO extends CrudDAO<Grado> {
 
     Grado buscarPorNombreYNivel(String nombre, String nivel);
-
     List<Grado> listarPorNivel(String nivel);
 }

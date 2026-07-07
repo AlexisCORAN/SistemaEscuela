@@ -31,10 +31,20 @@ public class Curso {
         this.nombre = validarTextoRequerido(nombre, "El nombre del curso");
         validarHoras(horasSemanales);
         this.horasSemanales = horasSemanales;
-        this.docente = Objects.requireNonNull(docente, "El docente no puede ser nulo");
+        this.docente = docente;
         this.gradoAsignado = gradoAsignado;
         this.activo = activo;
     }
+    
+    public Curso(Curso otroCurso) {
+    this.id = otroCurso.getId();
+    this.codigo = otroCurso.getCodigo();
+    this.nombre = otroCurso.getNombre();
+    this.horasSemanales = otroCurso.getHorasSemanales();
+    this.docente = otroCurso.getDocente();
+    this.gradoAsignado = otroCurso.getGradoAsignado();
+    this.activo = otroCurso.isActivo();
+}
 
     private String validarTextoRequerido(String texto, String nombreCampo) {
         String textoValidado = Objects.requireNonNull(texto, nombreCampo + " no pueden ser nulo").trim();
@@ -101,7 +111,7 @@ public class Curso {
     }
 
     public void setDocente(Docente docente) {
-        this.docente = Objects.requireNonNull(docente, "El docente no puede ser nulo");
+        this.docente = docente;
     }
 
     public void asociarGrado(Grado gradoAsignado) {

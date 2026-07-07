@@ -31,6 +31,14 @@ public class Apoderado extends Persona {
         this.correo = validarCorreoFormato(correo);
         validarContactoObligatorio(validarTelefonoFormato(telefono), validarCorreoFormato(correo));
     }
+    
+    public Apoderado(Apoderado otroApoderado) {
+        super(otroApoderado.getId(), otroApoderado.getDni(), otroApoderado.getNombres(),
+              otroApoderado.getApellidos(), otroApoderado.getFechaNacimiento(), otroApoderado.isActivo());
+        this.parentesco = otroApoderado.getParentesco();
+        this.telefono = otroApoderado.getTelefono();
+        this.correo = otroApoderado.getCorreo();
+    }
 
     private String validarParentesco(String parentesco) {
         String valor = Objects.requireNonNull(parentesco, "El parentesco no puede ser nulo").trim();

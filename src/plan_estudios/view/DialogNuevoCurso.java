@@ -4,9 +4,10 @@ import docentes.model.Docente;
 import java.util.ArrayList;
 import java.util.List;
 import main.VentanaPrincipal;
-import plan_estudios.controller.CursoController;
+import plan_estudios.controller.PlanEstudiosController;
 import plan_estudios.model.Curso;
 import plan_estudios.model.Grado;
+import shared.IDataListener;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -20,24 +21,29 @@ import plan_estudios.model.Grado;
 public class DialogNuevoCurso extends javax.swing.JDialog {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(DialogNuevoCurso.class.getName());
-    private final CursoController cursoController;
-    private final PanelPlanEstudios panelPadre;
-    private final List<Grado> gradosMapeados;
-    private final List<Docente> docentesMapeados;
+    private final PlanEstudiosController planEstudioscontroller;
+    private final IDataListener listener;
+    private final List<Grado> grados;
+    private final List<Docente> docentes;
     private final Curso cursoEdicion;
     
     /**
      * Creates new form DialogNuevoCurso
      * @param parent
      * @param modal
+     * @param planEstudioscontroller
+     * @param listener
+     * @param cursoAEditar
+     * @param docentes
+     * @param grados
      */
-    public DialogNuevoCurso(java.awt.Frame parent, boolean modal, CursoController cursoController, PanelPlanEstudios panelPadre, Curso cursoAEditar, List<Grado> grados, List<Docente> docentes) {
+    public DialogNuevoCurso(java.awt.Frame parent, boolean modal, PlanEstudiosController planEstudioscontroller, IDataListener listener, Curso cursoAEditar, List<Grado> grados, List<Docente> docentes) {
         super(parent, modal);
-        this.cursoController = cursoController;
-        this.panelPadre = panelPadre;
+        this.planEstudioscontroller = planEstudioscontroller;
+        this.listener = listener;
         this.cursoEdicion = cursoAEditar; 
-        this.gradosMapeados = (grados != null) ? grados : new ArrayList<>();
-        this.docentesMapeados = (docentes != null) ? docentes : new ArrayList<>();
+        this.grados = (grados != null) ? grados : new ArrayList<>();
+        this.docentes = (docentes != null) ? docentes : new ArrayList<>();
         
         initComponents();
         this.setLocationRelativeTo(parent);
@@ -62,12 +68,10 @@ public class DialogNuevoCurso extends javax.swing.JDialog {
     }
 
     private void inicializarCombos() {
-
-        for (Grado g : gradosMapeados) {
+        for (Grado g : grados) {
             cboGrado.addItem(g.getNombre() + " - " + g.getNivel());
         }
-
-        for (Docente d : docentesMapeados) {
+        for (Docente d : docentes) {
             cboDocentes.addItem(d.getApellidos() + ", " + d.getNombres());
         }
     }
@@ -77,7 +81,7 @@ public class DialogNuevoCurso extends javax.swing.JDialog {
         if (index <= 0) {
             throw new IllegalStateException("Debe seleccionar un grado válido.");
         }
-        return gradosMapeados.get(index - 1);
+        return grados.get(index - 1);
     }
 
     private Docente obtenerDocenteSeleccionado() {
@@ -85,7 +89,7 @@ public class DialogNuevoCurso extends javax.swing.JDialog {
         if (index <= 0) {
             throw new IllegalStateException("Debe seleccionar un docente para el curso.");
         }
-        return docentesMapeados.get(index - 1);
+        return docentes.get(index - 1);
     }
 
     private Curso obtenerCursoDesdeFormulario() {
@@ -320,27 +324,23 @@ public class DialogNuevoCurso extends javax.swing.JDialog {
     }//GEN-LAST:event_cboGradoActionPerformed
 
     private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
-        if (cursoController == null) return;
-
         try {
-            final boolean exito = (cursoEdicion != null)
-                ? cursoController.actualizarCurso(actualizarCursoDesdeFormulario())
-                : cursoController.registrarCurso(obtenerCursoDesdeFormulario());
+            Curso curso = (cursoEdicion != null) ? actualizarCursoDesdeFormulario() : obtenerCursoDesdeFormulario();
 
-            if (exito) {
-                mostrarMensaje("¡Operación realizada con éxito!", "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-                if (panelPadre != null) {
-                    panelPadre.refrescarTabla(cursoController.obtenerCursos());
+            String error = (cursoEdicion != null) 
+                ? planEstudioscontroller.actualizarCurso(curso)
+                : planEstudioscontroller.registrarCurso(curso); 
+
+            if (error == null) {
+                if (listener != null) {
+                    listener.onDataChanged();
                 }
                 this.dispose();
             } else {
-                mostrarMensaje("Error de persistencia en la base de datos.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                mostrarMensaje(error, "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
             }
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            mostrarMensaje(e.getMessage(), "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
-        } catch (RuntimeException e) {
-            logger.log(java.util.logging.Level.SEVERE, "Error crítico de sistema al guardar", e);
-            mostrarMensaje("Ocurrió un error inesperado de sistema.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            mostrarMensaje(e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnGuardarActionPerformed
 
