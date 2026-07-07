@@ -103,6 +103,15 @@ public class AlumnoDAOImpl implements IAlumnoDAO {
         final String sql = SELECT_BASE + " WHERE A.codigoEstudiante = ?";
         return JdbcTemplate.queryForObject(conexion, sql, RowMappers.ALUMNO_ROW_MAPPER, codigoEstudiante);
     }
+    
+    @Override
+    public Alumno buscarPorDni(final String codigoEstudiante) {
+        if (conexion == null) return null;
+        
+        final String sql = SELECT_BASE + " WHERE A.dni = ?";
+        return JdbcTemplate.queryForObject(conexion, sql, RowMappers.ALUMNO_ROW_MAPPER, codigoEstudiante);
+    }
+    
 
     @Override
     public List<Alumno> listarPorEstado(boolean activo) {

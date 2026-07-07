@@ -38,11 +38,32 @@ public class DialogNuevaMatricula extends javax.swing.JDialog {
         this.matriculaController = matriculaController;
         this.panelPadre = panelPadre;
         this.matriculaDetalle = matriculaDetalle; 
-        initComponents();
+        
+        initComponents(); 
         this.setLocationRelativeTo(parent);
         
         configurarTabla();
+        inicializarComponentesPorModo();
+    }
+
+
+
+    private void configurarTabla() {
+        tablaMatricula.getTableHeader().setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        tablaMatricula.getTableHeader().setBackground(new java.awt.Color(240, 240, 240));
+        tablaMatricula.getTableHeader().setForeground(new java.awt.Color(50, 50, 50));
         
+        javax.swing.table.DefaultTableCellRenderer renderCentrado = new javax.swing.table.DefaultTableCellRenderer();
+        renderCentrado.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        javax.swing.table.DefaultTableCellRenderer renderIzquierdo = new javax.swing.table.DefaultTableCellRenderer();
+        renderIzquierdo.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        
+        tablaMatricula.getColumnModel().getColumn(0).setCellRenderer(renderCentrado); 
+        tablaMatricula.getColumnModel().getColumn(1).setCellRenderer(renderIzquierdo); 
+        tablaMatricula.getColumnModel().getColumn(2).setCellRenderer(renderCentrado); 
+    }
+
+    private void inicializarComponentesPorModo() {
         if (this.matriculaDetalle != null) {
             configurarModoDetalle();
         } else {
@@ -50,61 +71,135 @@ public class DialogNuevaMatricula extends javax.swing.JDialog {
         }
     }
 
-    private void configurarTabla() {
-        tablaMatricula.getTableHeader().setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
-        tablaMatricula.getTableHeader().setBackground(new java.awt.Color(240, 240, 240));
-        tablaMatricula.getTableHeader().setForeground(new java.awt.Color(50, 50, 50));
-        javax.swing.table.DefaultTableCellRenderer renderCentrado = new javax.swing.table.DefaultTableCellRenderer();
-        renderCentrado.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        javax.swing.table.DefaultTableCellRenderer renderIzquierdo = new javax.swing.table.DefaultTableCellRenderer();
-        renderIzquierdo.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        tablaMatricula.getColumnModel().getColumn(0).setCellRenderer(renderCentrado); 
-        tablaMatricula.getColumnModel().getColumn(1).setCellRenderer(renderIzquierdo); 
-        tablaMatricula.getColumnModel().getColumn(2).setCellRenderer(renderCentrado); 
-        if (tablaMatricula.getTableHeader().getDefaultRenderer() instanceof javax.swing.table.DefaultTableCellRenderer) {
-            ((javax.swing.table.DefaultTableCellRenderer) tablaMatricula.getTableHeader().getDefaultRenderer())
-                    .setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        }
+    private void configurarModoNuevo() {
+        txtAñoEscolar.setText(String.valueOf(java.time.LocalDate.now().getYear()));
+        cargarComboboxGrados();
     }
-
+    
     private void configurarModoDetalle() {
         nombrePanel.setText("Detalle Consolidados de Matrícula: " + matriculaDetalle.getCodigoMatricula());
+        
         if (matriculaDetalle.getAlumno() != null) {
-            txtDocBusqueda.setText(matriculaDetalle.getAlumno().getDni()); 
-            txtNombresEstudiante.setText(matriculaDetalle.getAlumno().getApellidos() + ", " + matriculaDetalle.getAlumno().getNombres());
+            this.alumnoContexto = matriculaDetalle.getAlumno(); 
+            txtDocBusqueda.setText(alumnoContexto.getDni()); 
+            txtNombresEstudiante.setText(alumnoContexto.getApellidos() + ", " + alumnoContexto.getNombres());
         }
-        txtAñoEscolar.setText(String.valueOf(matriculaDetalle.getAñoEscolar()));
+        
+        txtAñoEscolar.setText(String.valueOf(matriculaDetalle.getAnioEscolar()));
         
         txtDocBusqueda.setEditable(false);
         btnBuscarAlumno.setEnabled(false);
-        cboGrados.removeAllItems();
-        
-        if (matriculaDetalle.getGrado() != null) {
-            cboGrados.addItem(matriculaDetalle.getGrado().getNombre() + " - " + matriculaDetalle.getGrado().getNivel());
-        }
         cboGrados.setEnabled(false);
         btnGuardar.setVisible(false); 
         
+        cargarComboDetalleFijo();
+        pintarCursosEnTabla(matriculaDetalle.getCursosMatriculados());
+    }
+
+    private void cargarComboboxGrados() {
+        if (this.matriculaController == null) return;
+        
+        cboGrados.removeAllItems();
+        cboGrados.addItem("-- Seleccione un Grado --");
+        this.gradosCargadosContexto = matriculaController.obtenerGradosConCursos();
+        
+        for (Grado g : this.gradosCargadosContexto) {
+            cboGrados.addItem(g.getNombre() + " - " + g.getNivel());
+        }
+    }
+
+    private void cargarComboDetalleFijo() {
+        cboGrados.removeAllItems();
+        if (matriculaDetalle.getGrado() != null) {
+            cboGrados.addItem(matriculaDetalle.getGrado().getNombre() + " - " + matriculaDetalle.getGrado().getNivel());
+        }
+    }
+
+    private void pintarCursosEnTabla(List<MatriculaCurso> cursos) {
         limpiarTablaCursos();
-        if (matriculaDetalle.getCursosMatriculados() != null) {
-            for (matricula.model.MatriculaCurso mc : matriculaDetalle.getCursosMatriculados()) {
-                if (mc.getCurso() != null) {
-                    agregarCursoATabla(mc.getCurso().getCodigo(), mc.getCurso().getNombre(), mc.getCurso().getHorasSemanales());
-                }
+        if (cursos == null) return;
+        
+        for (MatriculaCurso mc : cursos) {
+            if (mc.getCurso() != null) {
+                agregarCursoATabla(mc.getCurso().getCodigo(), mc.getCurso().getNombre(), mc.getCurso().getHorasSemanales());
             }
         }
     }
 
-    private void configurarModoNuevo() {
-        txtAñoEscolar.setText(String.valueOf(java.time.LocalDate.now().getYear()));
-        if (this.matriculaController != null) {
-            cboGrados.removeAllItems();
-            cboGrados.addItem("-- Seleccione un Grado --");
-            this.gradosCargadosContexto = matriculaController.obtenerGradosConCursos();
-            for (Grado g : this.gradosCargadosContexto) {
-                cboGrados.addItem(g.getNombre() + " - " + g.getNivel());
+   
+    private void ejecutarBusquedaAlumno() {
+        if (matriculaController == null) return;
+        
+        String criterio = txtDocBusqueda.getText().trim();
+        if (criterio.isEmpty()) {
+            mostrarMensaje("Debe ingresar un DNI o código válido.", "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            Alumno alum = matriculaController.buscarAlumnoParaMatricula(criterio);
+            if (alum != null) {
+                this.alumnoContexto = alum;
+                txtNombresEstudiante.setText(alum.getApellidos() + ", " + alum.getNombres());
+            } else {
+                this.alumnoContexto = null;
+                txtNombresEstudiante.setText("");
+                mostrarMensaje("Estudiante no encontrado en el sistema.", "Búsqueda", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (IllegalStateException e) {
+            this.alumnoContexto = null;
+            txtNombresEstudiante.setText("");
+            mostrarMensaje(e.getMessage(), "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void procesarRegistroMatricula() {
+        if (this.alumnoContexto == null) {
+            mostrarMensaje("Debe seleccionar un estudiante válido antes de guardar.", "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int indexGrado = cboGrados.getSelectedIndex();
+        if (indexGrado <= 0) {
+            mostrarMensaje("Debe seleccionar un grado académico para el estudiante.", "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            Grado gradoSeleccionado = gradosCargadosContexto.get(indexGrado - 1);
+            int año = Integer.parseInt(txtAñoEscolar.getText().trim());
+
+            Matricula nuevaMatricula = construirObjetoMatriculaDesdeFormulario(gradoSeleccionado, año);
+
+            String mensajeError = matriculaController.registrarMatricula(nuevaMatricula);
+
+            if (mensajeError == null) {
+                mostrarMensaje("¡Matrícula registrada con éxito!", "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                if (panelPadre != null) {
+                    panelPadre.refrescarTabla(matriculaController.obtenerMatriculas()); 
+                }
+                this.dispose(); 
+            } else {
+                mostrarMensaje(mensajeError, "Error de Consistencia", javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (NumberFormatException e) {
+            mostrarMensaje("El año escolar no cuenta con un formato numérico válido.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private Matricula construirObjetoMatriculaDesdeFormulario(Grado grado, int año) {
+        Matricula m = new Matricula();
+        m.setAlumno(this.alumnoContexto);
+        m.setGrado(grado);
+        m.setAnioEscolar(año);
+        m.setFechaMatricula(java.time.LocalDate.now());
+
+        if (grado.getCursos() != null) {
+            m.setActivo(true); 
+            for (Curso c : grado.getCursos()) {
+                m.agregarCurso(new MatriculaCurso(c));
             }
         }
+        return m;
     }
 
     /**
@@ -152,6 +247,7 @@ public class DialogNuevaMatricula extends javax.swing.JDialog {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(1200, 700));
         setModal(true);
+        setPreferredSize(new java.awt.Dimension(1200, 700));
         setResizable(false);
 
         panelPrincipal.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -407,49 +503,7 @@ public class DialogNuevaMatricula extends javax.swing.JDialog {
     }//GEN-LAST:event_txtNombresEstudianteActionPerformed
 
     private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
-       if (matriculaController == null) return;
-        
-        if (this.alumnoContexto == null) {
-            mostrarMensaje("Debe seleccionar un estudiante válido antes de guardar.", "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        
-        int indexGrado = cboGrados.getSelectedIndex();
-        if (indexGrado <= 0) {
-            mostrarMensaje("Debe seleccionar un grado académico para el estudiante.", "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        try {
-            Grado gradoSeleccionado = gradosCargadosContexto.get(indexGrado - 1);
-            int año = Integer.parseInt(txtAñoEscolar.getText().trim());
-            
-
-            Matricula m = new Matricula();
-            m.setAlumno(this.alumnoContexto);
-            m.setGrado(gradoSeleccionado);
-            m.setAñoEscolar(año);
-            m.setFechaMatricula(java.time.LocalDate.now());
-            
-            if (gradoSeleccionado.getCursos() != null) {
-                m.setActivo(true); 
-                for (Curso c : gradoSeleccionado.getCursos()) {
-                    m.agregarCurso(new MatriculaCurso(c));
-                }
-            }
-
-            if (matriculaController.registrarMatricula(m)) {
-                mostrarMensaje("¡Matrícula registrada con éxito!", "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-                if (panelPadre != null) {
-                    panelPadre.refrescarTabla(matriculaController.obtenerMatriculas()); 
-                }
-                this.dispose(); 
-            } else {
-                mostrarMensaje("Error al persistir la matrícula.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (NumberFormatException e) {
-            mostrarMensaje("El año escolar no cuenta con un formato válido.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-        }
+        procesarRegistroMatricula();
     }//GEN-LAST:event_btnGuardarActionPerformed
 
     private void btnBuscarAlumnoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBuscarAlumnoActionPerformed
@@ -457,44 +511,18 @@ public class DialogNuevaMatricula extends javax.swing.JDialog {
     }//GEN-LAST:event_btnBuscarAlumnoActionPerformed
 
     private void cboGradosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboGradosActionPerformed
-       limpiarTablaCursos();
+        limpiarTablaCursos();
         int index = cboGrados.getSelectedIndex();
-        
         if (index > 0 && !gradosCargadosContexto.isEmpty()) {
             Grado gradoContexto = gradosCargadosContexto.get(index - 1);
             if (gradoContexto != null && gradoContexto.getCursos() != null) {
-                for (Curso c : gradoContexto.getCursos()) {
+                for (plan_estudios.model.Curso c : gradoContexto.getCursos()) {
                     agregarCursoATabla(c.getCodigo(), c.getNombre(), c.getHorasSemanales());
                 }
             }
         }
     }//GEN-LAST:event_cboGradosActionPerformed
 
-    private void ejecutarBusquedaAlumno() {
-        if (matriculaController == null) return;
-        String criterio = txtDocBusqueda.getText().trim();
-        if (criterio.isEmpty()) {
-            mostrarMensaje("Debe ingresar un DNI o código válido.", "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        try {
-            Alumno alum = matriculaController.buscarAlumnoParaMatricula(criterio);
-            if (alum != null) {
-                this.alumnoContexto = alum; 
-                txtNombresEstudiante.setText(alum.getApellidos() + ", " + alum.getNombres());
-            } else {
-                this.alumnoContexto = null;
-                txtNombresEstudiante.setText("");
-                mostrarMensaje("Estudiante no encontrado en el sistema.", "Búsqueda", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            }
-        } catch (IllegalStateException e) {
-            this.alumnoContexto = null;
-            txtNombresEstudiante.setText("");
-            mostrarMensaje(e.getMessage(), "Validación", javax.swing.JOptionPane.WARNING_MESSAGE);
-        }
-    }
-    
     public void limpiarTablaCursos() {
         ((DefaultTableModel) tablaMatricula.getModel()).setRowCount(0);
     }

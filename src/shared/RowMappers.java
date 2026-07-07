@@ -133,38 +133,65 @@ public final class RowMappers {
 
         return curso;
     };
+    
+   public static final IRowMapper<Matricula> MATRICULA_COMPLETA_MAPPER = rs -> {
+        final Matricula m = new Matricula();
+        m.setId(rs.getInt("idMatricula"));
+        m.setCodigoMatricula(rs.getString("codigoMatricula"));
+        m.setAnioEscolar(rs.getInt("anioEscolar"));
 
-    public static final IRowMapper<Matricula> MATRICULA_ROW_MAPPER = rs -> {
-        Matricula matricula = new Matricula();
-        matricula.setId(rs.getInt("idMatricula"));
-        matricula.setCodigoMatricula(rs.getString("codigoMatricula"));
-        matricula.setAñoEscolar(rs.getInt("anioEscolar"));
-        matricula.setFechaMatricula(rs.getDate("fechaMatricula").toLocalDate());
-        matricula.setActivo(rs.getString("estado").equalsIgnoreCase("VIGENTE"));
-        return matricula;
+        java.sql.Date fechaMat = rs.getDate("fechaMatricula");
+        m.setFechaMatricula(fechaMat != null ? fechaMat.toLocalDate() : null);
+
+        m.setActivo(rs.getString("estadoCabecera").equalsIgnoreCase("VIGENTE"));
+
+        final Alumno al = new Alumno();
+        al.setId(rs.getInt("idAlumno"));
+        al.setDni(rs.getString("alumnoDni"));
+        al.setNombres(rs.getString("alumnoNombres"));
+        al.setApellidos(rs.getString("alumnoApellidos"));
+        al.setCodigoEstudiante(rs.getString("alumnoCodigoEstudiante"));
+        m.setAlumno(al);
+
+        final Grado g = new Grado();
+        g.setId(rs.getInt("idGrado"));
+        g.setNombre(rs.getString("gradoNombre"));
+        g.setNivel(rs.getString("gradoNivel"));
+        m.setGrado(g);
+
+        return m;
     };
 
-    public static final IRowMapper<RegistroBimestral> REGISTRO_BIMESTRAL_ROW_MAPPER = rs -> {
-        RegistroBimestral rb = new RegistroBimestral();
 
-        rb.setId(rs.getInt("idRegistroBimestral"));
-        rb.setBimestre(shared.Bimestre.desdeId(rs.getInt("bimestre")));
-        rb.setActivo(rs.getString("estado").equalsIgnoreCase("ABIERTO"));
+    public static final IRowMapper<RegistroBimestral> REGISTRO_BIMESTRAL_ROW_MAPPER = rs -> {
+        String estado = rs.getString("estado");
+        boolean activo = estado != null && estado.equalsIgnoreCase("ABIERTO");
+
+        Bimestre bimestre = shared.Bimestre.desdeId(rs.getInt("bimestre"));
 
         MatriculaCurso mc = new MatriculaCurso();
         if (hasColumn(rs, "idMatriculaCurso")) {
             mc.setId(rs.getInt("idMatriculaCurso"));
         }
-
         if (hasColumn(rs, "cursoNombre")) {
             plan_estudios.model.Curso curso = new plan_estudios.model.Curso();
             curso.setNombre(rs.getString("cursoNombre"));
             mc.setCurso(curso);
         }
 
-        rb.setMatriculaCurso(mc);
-        rb.setEvaluaciones(new ArrayList<>());
+        java.time.LocalDateTime fechaCierre = null;
+        if (hasColumn(rs, "fechaCierre")) {
+            java.sql.Timestamp ts = rs.getTimestamp("fechaCierre");
+            fechaCierre = (ts != null) ? ts.toLocalDateTime() : null;
+        }
 
-        return rb;
+        return new RegistroBimestral(
+            rs.getInt("idRegistroBimestral"),
+            mc,
+            bimestre,
+            activo,
+            fechaCierre,
+            new ArrayList<>()
+        );
     };
 }

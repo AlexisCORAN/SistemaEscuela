@@ -21,7 +21,7 @@ public class Matricula {
     private String codigoMatricula;
     private Alumno alumno;
     private LocalDate fechaMatricula;
-    private int añoEscolar;
+    private int anioEscolar;
     private boolean activo;
     private List<MatriculaCurso> cursosMatriculados;
     private Grado grado;
@@ -30,26 +30,44 @@ public class Matricula {
         this.cursosMatriculados = new ArrayList<>();
     }
 
-    public Matricula(Integer id, String codigoMatricula, Alumno alumno, Grado grado, LocalDate fechaMatricula, int añoEscolar, boolean activo) {
+    public Matricula(Integer id, String codigoMatricula, Alumno alumno, Grado grado, LocalDate fechaMatricula, int anioEscolar, boolean activo) {
         this.id = id;
         this.codigoMatricula = codigoMatricula;
         this.alumno = alumno;
         this.grado = grado;
         this.fechaMatricula = fechaMatricula;
-        this.añoEscolar = añoEscolar; 
+        this.anioEscolar = anioEscolar; 
         this.activo = activo;
         this.cursosMatriculados = new ArrayList<>();
-        validarAñoEscolar(añoEscolar, fechaMatricula);
+        validarAnioEscolar(anioEscolar, fechaMatricula);
+    }
+    
+    public Matricula(Matricula otraMatricula) {
+        if (otraMatricula == null) return;
+        this.id = otraMatricula.id;
+        this.codigoMatricula = otraMatricula.codigoMatricula;
+        this.alumno = otraMatricula.alumno; 
+        this.grado = otraMatricula.grado;   
+        this.fechaMatricula = otraMatricula.fechaMatricula;
+        this.anioEscolar = otraMatricula.anioEscolar;
+        this.activo = otraMatricula.activo;
+        
+        this.cursosMatriculados = new ArrayList<>();
+        if (otraMatricula.cursosMatriculados != null) {
+            for (MatriculaCurso mc : otraMatricula.cursosMatriculados) {
+                this.cursosMatriculados.add(new MatriculaCurso(mc.getId(), mc.getCurso(), mc.getNotaFinal()));
+            }
+        }
     }
 
-    private static void validarAñoEscolar(int añoEscolar, LocalDate fechaMatricula) {
-        if (añoEscolar <= 0) {
-            throw new IllegalArgumentException("El año escolar debe ser un valor positivo.");
+    private static void validarAnioEscolar(int anioEscolar, LocalDate fechaMatricula) {
+        if (anioEscolar <= 0) {
+            throw new IllegalArgumentException("El anio escolar debe ser un valor positivo.");
         }
-        int añoFecha = fechaMatricula.getYear();
-        if (Math.abs(añoEscolar - añoFecha) > 1) {
+        int anioFecha = fechaMatricula.getYear();
+        if (Math.abs(anioEscolar - anioFecha) > 1) {
             throw new IllegalArgumentException(
-                "El año escolar (" + añoEscolar + ") es inconsistente con la fecha de matrícula (" + fechaMatricula + ")."
+                "El anio escolar (" + anioEscolar + ") es inconsistente con la fecha de matrícula (" + fechaMatricula + ")."
             );
         }
     }
@@ -70,8 +88,8 @@ public class Matricula {
         return fechaMatricula;
     }
 
-    public int getAñoEscolar() {
-        return añoEscolar;
+    public int getAnioEscolar() {
+        return anioEscolar;
     }
 
     public boolean getActivo() {
@@ -106,8 +124,8 @@ public class Matricula {
         this.fechaMatricula = Objects.requireNonNull(fechaMatricula, "La fecha de matrícula no puede ser nula");
     }
 
-    public void setAñoEscolar(int añoEscolar) {
-        this.añoEscolar = añoEscolar;
+    public void setAnioEscolar(int anioEscolar) {
+        this.anioEscolar = anioEscolar;
     }
 
     public void setActivo(boolean activo) {
@@ -128,6 +146,10 @@ public class Matricula {
     public void anular() {
         this.activo = false;
     }
+    
+    public void limpiarCursos() {
+        this.cursosMatriculados.clear();
+    }
 
     
     public void asignarGrado(Grado grado) {
@@ -135,6 +157,6 @@ public class Matricula {
     }
     
     public void generarCodigoMatricula(int correlativo) {
-        this.codigoMatricula = "MAT-" + this.añoEscolar + "-" + String.format("%04d", correlativo);
+        this.codigoMatricula = "MAT-" + this.anioEscolar + "-" + String.format("%04d", correlativo);
     }
 }

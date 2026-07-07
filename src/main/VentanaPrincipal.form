@@ -341,7 +341,7 @@
         </Component>
         <Component class="plan_estudios.view.PanelPlanEstudios" name="panelPlanEstudios1">
           <AuxValues>
-            <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new plan_estudios.view.PanelPlanEstudios(planEstudiosController)"/>
+            <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new plan_estudios.view.PanelPlanEstudios(planEstudiosController, docenteController)"/>
           </AuxValues>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignCardLayout" value="org.netbeans.modules.form.compat2.layouts.DesignCardLayout$CardConstraintsDescription">
@@ -351,7 +351,7 @@
         </Component>
         <Component class="notas.view.PanelNotas" name="panelNotas1">
           <AuxValues>
-            <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new notas.view.PanelNotas(notasController)"/>
+            <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new notas.view.PanelNotas(notasController, planEstudiosController)"/>
           </AuxValues>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignCardLayout" value="org.netbeans.modules.form.compat2.layouts.DesignCardLayout$CardConstraintsDescription">

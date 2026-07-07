@@ -153,4 +153,34 @@ public class PlanEstudiosService {
         }
         curso.generarCodigoCurso(correlativo);
     }
+    
+    public List<Grado> obtenerGradosConCursos() {
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            final IGradoDAO gradoDAO = new GradoDAOImpl(conn);
+            final ICursoDAO cursoDAO = new CursoDAOImpl(conn);
+
+            List<Grado> listaGrados = gradoDAO.listarTodos().stream()
+                    .filter(Grado::isActivo)
+                    .toList();
+            
+            if (listaGrados.isEmpty()) {
+                return listaGrados;
+            }
+
+            List<Curso> cursosActivos = cursoDAO.listarPorEstado(true);
+
+            for (Grado grado : listaGrados) {
+                for (Curso curso : cursosActivos) {
+                    if (curso.getGradoAsignado() != null && curso.getGradoAsignado().getId().equals(grado.getId())) {
+                        grado.agregarCurso(curso);
+                    }
+                }
+            }
+            
+            return listaGrados;
+        } catch (final Exception e) {
+            System.err.println("Error en PlanEstudiosService al procesar mallas: " + e.getMessage());
+            return Collections.emptyList();
+        }
+    }
 }

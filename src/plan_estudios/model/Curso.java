@@ -31,7 +31,7 @@ public class Curso {
         this.nombre = validarTextoRequerido(nombre, "El nombre del curso");
         validarHoras(horasSemanales);
         this.horasSemanales = horasSemanales;
-        this.docente = Objects.requireNonNull(docente, "El docente no puede ser nulo");
+        this.docente = docente;
         this.gradoAsignado = gradoAsignado;
         this.activo = activo;
     }
@@ -111,7 +111,7 @@ public class Curso {
     }
 
     public void setDocente(Docente docente) {
-        this.docente = Objects.requireNonNull(docente, "El docente no puede ser nulo");
+        this.docente = docente;
     }
 
     public void asociarGrado(Grado gradoAsignado) {

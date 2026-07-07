@@ -5,16 +5,18 @@
 package matricula.dao;
 import java.util.List;
 import matricula.model.Matricula;
-import plan_estudios.model.Grado;
 import shared.CrudDAO;
 /**
  *
  * @author Alexis
  */
 public interface IMatriculaDAO extends CrudDAO<Matricula> {
-    Matricula obtenerMatriculaActiva(String codigoEstudiante, int añoEscolar);
-    List<Matricula> listarPorGradoAño(int idGrado, int añoEscolar);
-    List<Grado> listarGradosConCursos();
+    Matricula obtenerMatriculaActiva(String codigoEstudiante, int anioEscolar);
+    List<Matricula> listarPorGradoAnio(int idGrado, int anioEscolar);
     boolean anularMatricula(Integer idMatricula);
     String obtenerUltimoCodigo();
+    List<Matricula> buscarPorCriterioMatricula(String criterio);
+    List<Matricula> listarPorEstado(String estadoDb);
+    Integer obtenerIdMatriculaCurso(String codigoMatricula, Integer idCurso);
+    
 }

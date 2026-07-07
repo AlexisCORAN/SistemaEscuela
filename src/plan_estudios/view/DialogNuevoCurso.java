@@ -31,11 +31,16 @@ public class DialogNuevoCurso extends javax.swing.JDialog {
      * Creates new form DialogNuevoCurso
      * @param parent
      * @param modal
+     * @param planEstudioscontroller
+     * @param listener
+     * @param cursoAEditar
+     * @param docentes
+     * @param grados
      */
     public DialogNuevoCurso(java.awt.Frame parent, boolean modal, PlanEstudiosController planEstudioscontroller, IDataListener listener, Curso cursoAEditar, List<Grado> grados, List<Docente> docentes) {
         super(parent, modal);
         this.planEstudioscontroller = planEstudioscontroller;
-        this.listener = listener; // <-- 4. Asignar el listener
+        this.listener = listener;
         this.cursoEdicion = cursoAEditar; 
         this.grados = (grados != null) ? grados : new ArrayList<>();
         this.docentes = (docentes != null) ? docentes : new ArrayList<>();

@@ -14,6 +14,7 @@ import shared.CrudDAO;
 
 public interface IAlumnoDAO extends CrudDAO<Alumno> {
     Alumno buscarPorCodigo(String codigoEstudiante);
+    Alumno buscarPorDni(String dniEstudiante);
     String obtenerUltimoCodigo();
     List<Alumno> listarPorEstado(boolean activo);
     boolean existeDni(String dni, Integer idExcluido);

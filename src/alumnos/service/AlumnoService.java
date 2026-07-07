@@ -33,7 +33,7 @@ public class AlumnoService {
         }
     }
 
-    public Alumno buscarAlumnoPorCodigoExacto(String codigo) {
+    public Alumno buscarAlumnoPorCodigo(String codigo) {
         if (codigo == null || codigo.isBlank()) return null;
 
         try (Connection conn = ConexionDB.getInstance().getConexion()) {
@@ -44,6 +44,18 @@ public class AlumnoService {
             return null;
         }
     }
+    
+    public Alumno buscarAlumnoPorDni(String dni) {
+    if (dni == null || dni.isBlank()) return null;
+
+    try (Connection conn = ConexionDB.getInstance().getConexion()) {
+        IAlumnoDAO alumnoDAO = new AlumnoDAOImpl(conn);
+        return alumnoDAO.buscarPorDni(dni.trim()); 
+    } catch (SQLException e) {
+        System.err.println("Error al buscar alumno por DNI exacto: " + e.getMessage());
+        return null;
+    }
+}
 
     public List<Alumno> obtenerAlumnosPorEstado(String filtroEstado) {
         if (filtroEstado == null || filtroEstado.equals("TODOS")) {

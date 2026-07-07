@@ -42,6 +42,8 @@ public class VentanaPrincipal extends javax.swing.JFrame  implements IDataListen
         if (panelAlumnos1 != null) panelAlumnos1.recargarDatos();
         if (panelDocentes1 != null) panelDocentes1.recargarDatos();
         if (panelPlanEstudios1 != null) panelPlanEstudios1.recargarDatos();
+        if (panelMatricula1 != null) panelMatricula1.recargarDatos();
+        if (panelNotas1 != null) panelNotas1.recargarDatos();
         System.out.println("Los datos cambiaron, paneles actualizados.");
     }
 
@@ -73,8 +75,8 @@ public class VentanaPrincipal extends javax.swing.JFrame  implements IDataListen
         panelAlumnos1 = new alumnos.view.PanelAlumnos(alumnoController);
         panelDocentes1 = new docentes.view.PanelDocentes(docenteController);
         panelMatricula1 = new matricula.view.PanelMatricula(matriculaController);
-        panelPlanEstudios1 = new plan_estudios.view.PanelPlanEstudios(planEstudiosController);
-        panelNotas1 = new notas.view.PanelNotas(notasController);
+        panelPlanEstudios1 = new plan_estudios.view.PanelPlanEstudios(planEstudiosController, docenteController);
+        panelNotas1 = new notas.view.PanelNotas(notasController, planEstudiosController);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 

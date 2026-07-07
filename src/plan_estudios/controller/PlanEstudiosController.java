@@ -100,4 +100,13 @@ public class PlanEstudiosController {
         }
         return java.util.Collections.emptyList();
     }
+    
+    public List<Grado> obtenerGradosConCursos() {
+        try {
+            return service.obtenerGradosConCursos();
+        } catch (RuntimeException e) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al obtener la estructura curricular para matrículas", e);
+            return java.util.Collections.emptyList();
+        }
+    }
 }

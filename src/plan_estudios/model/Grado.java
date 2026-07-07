@@ -37,6 +37,13 @@ public class Grado {
         this.nombre = otro.getNombre();
         this.nivel = otro.getNivel();
         this.activo = otro.isActivo();
+        this.cursos = new ArrayList<>();
+        
+        if (otro.getCursos() != null) {
+            for (Curso c : otro.getCursos()) {
+                this.agregarCurso(new Curso(c));
+            }
+        }
     }
 
     private String validarCadena(String valor, String campo) {

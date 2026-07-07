@@ -34,9 +34,9 @@ public class PanelPlanEstudios extends javax.swing.JPanel {
         this.setBackground(java.awt.Color.WHITE);
     }
      
-    public PanelPlanEstudios(PlanEstudiosController planEstudiosController) {
+    public PanelPlanEstudios(PlanEstudiosController planEstudiosController, DocenteController docenteController) {
         this.planEstudiosController = planEstudiosController;
-        this.docenteController = new DocenteController();
+        this.docenteController = docenteController;
         initComponents();
         this.setBackground(java.awt.Color.WHITE);
         if (this.planEstudiosController != null) {
@@ -63,7 +63,7 @@ public class PanelPlanEstudios extends javax.swing.JPanel {
             modelo.addRow(new Object[]{
                 c.getCodigo(),
                 c.getNombre(),
-                c.getGradoAsignado() != null ? c.getGradoAsignado().getNombre() : "No asignado",
+                c.getGradoAsignado() != null ? c.getGradoAsignado().getNombre() + " - " + c.getGradoAsignado().getNivel() : "No asignado",
                 c.getHorasSemanales(),
                 c.getDocente() != null ? c.getDocente().getNombreCompleto() : "Por asignar",
                 c.isActivo() ? "ACTIVO" : "INACTIVO"

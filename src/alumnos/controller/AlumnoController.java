@@ -74,7 +74,7 @@ public class AlumnoController {
     }
     
     public Alumno obtenerAlumnoParaEdicion(String codigoEstudiante) {
-        Alumno original = alumnoService.buscarAlumnoPorCodigoExacto(codigoEstudiante);
+        Alumno original = alumnoService.buscarAlumnoPorCodigo(codigoEstudiante);
         return crearCopiaAlumno(original);
     }
     
@@ -83,7 +83,7 @@ public class AlumnoController {
     }
     
     public List<Alumno> buscarAlumnosPorCodigoBusqueda(String codigo) {
-        Alumno alumno = alumnoService.buscarAlumnoPorCodigoExacto(codigo);
+        Alumno alumno = alumnoService.buscarAlumnoPorCodigo(codigo);
         if (alumno != null) {
             return java.util.Collections.singletonList(alumno);
         }
