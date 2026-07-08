@@ -4,9 +4,10 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Users/Alexis/Documents/NetBeansProjects/SistemaEscuela/src/plan_estudios/view/PanelPlanEstudios.java</file>
-            <file>file:/C:/Users/Alexis/Documents/NetBeansProjects/SistemaEscuela/src/plan_estudios/view/DialogNuevoCurso.java</file>
-            <file>file:/C:/Users/Alexis/Documents/NetBeansProjects/SistemaEscuela/src/docentes/view/PanelDocentes.java</file>
-            <file>file:/C:/Users/Alexis/Documents/NetBeansProjects/SistemaEscuela/src/alumnos/view/PanelAlumnos.java</file>
+            <file>file:/C:/Users/Alexis/Documents/NetBeansProjects/SistemaEscuela/src/notas/view/PanelNotas.java</file>
+            <file>file:/C:/Users/Alexis/Documents/NetBeansProjects/SistemaEscuela/src/notas/service/RegistroBimestralService.java</file>
+            <file>file:/C:/Users/Alexis/Documents/NetBeansProjects/SistemaEscuela/src/notas/dao/RegistroBimestralDAOImpl.java</file>
+            <file>file:/C:/Users/Alexis/Documents/NetBeansProjects/SistemaEscuela/src/alumnos/model/Alumno.java</file>
         </group>
     </open-files>
 </project-private>

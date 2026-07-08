@@ -34,7 +34,7 @@ public class PlanEstudiosController {
             return null; 
         } catch (IllegalArgumentException e) {
             return e.getMessage(); 
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             logger.log(java.util.logging.Level.SEVERE, "Error crítico al registrar curso", e);
             return "Ocurrió un error en la base de datos: " + e.getMessage();
         }
@@ -46,7 +46,7 @@ public class PlanEstudiosController {
             return null; 
         } catch (IllegalArgumentException e) {
             return e.getMessage();
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             logger.log(java.util.logging.Level.SEVERE, "Error crítico al actualizar curso", e);
             return "Ocurrió un error en la base de datos: " + e.getMessage();
         }
@@ -58,7 +58,7 @@ public class PlanEstudiosController {
             return null;
         } catch (IllegalArgumentException e) {
             return e.getMessage();
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             logger.log(java.util.logging.Level.SEVERE, "Error al dar de baja el curso: " + codigo, e);
             return "Error del sistema: " + e.getMessage();
         }
@@ -70,7 +70,7 @@ public class PlanEstudiosController {
             return null;
         } catch (IllegalArgumentException e) {
             return e.getMessage();
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             logger.log(java.util.logging.Level.SEVERE, "Error al reactivar el curso: " + codigo, e);
             return "Error del sistema: " + e.getMessage();
         }

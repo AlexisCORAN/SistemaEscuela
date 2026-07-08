@@ -18,8 +18,6 @@ import java.util.List;
 import matricula.dao.IMatriculaDAO;
 import matricula.dao.MatriculaDAOImpl;
 import matricula.model.Matricula;
-import shared.TransactionRunner;
-
 /**
  *
  * @author Alexis
@@ -62,24 +60,29 @@ public class MatriculaService {
     public void registrarMatricula(final Matricula m) {
         validarDatosBasicos(m);
 
-        TransactionRunner.ejecutar(conn -> {
-            final IMatriculaDAO matriculaDAO = new MatriculaDAOImpl(conn);
-
-            generarYAsignarCodigo(m, matriculaDAO);
-            verificarDuplicidad(m, matriculaDAO);
-
-            if (!matriculaDAO.insertar(m)) {
-                throw new RuntimeException("Error al registrar la cabecera de la matrícula.");
-            }
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            conn.setAutoCommit(false);
 
             try {
-                inicializarRegistrosBimestrales(m, conn);
-            } catch (SQLException e) {
-                throw new RuntimeException("Error al inicializar periodos de notas: " + e.getMessage());
-            }
+                final IMatriculaDAO matriculaDAO = new MatriculaDAOImpl(conn);
 
-            return null;
-        }, null);
+                generarYAsignarCodigo(m, matriculaDAO);
+                verificarDuplicidad(m, matriculaDAO);
+
+                if (!matriculaDAO.insertar(m)) {
+                    throw new RuntimeException("Error al registrar la cabecera de la matrícula.");
+                }
+
+                inicializarRegistrosBimestrales(m, conn);
+
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw new RuntimeException("Error en la transacción de matrícula: " + e.getMessage(), e);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error de conexión a la base de datos: " + e.getMessage(), e);
+        }
     }
 
     private void inicializarRegistrosBimestrales(Matricula m, Connection conn) throws SQLException {
@@ -115,13 +118,23 @@ public class MatriculaService {
             throw new IllegalArgumentException("El identificador interno de la matrícula no puede ser nulo.");
         }
 
-        TransactionRunner.ejecutar(conn -> {
-            final IMatriculaDAO matriculaDAO = new MatriculaDAOImpl(conn);
-            if (!matriculaDAO.anularMatricula(idMatricula)) {
-                throw new RuntimeException("El registro no pudo ser modificado en el motor de base de datos.");
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            conn.setAutoCommit(false);
+
+            try {
+                final IMatriculaDAO matriculaDAO = new MatriculaDAOImpl(conn);
+                if (!matriculaDAO.anularMatricula(idMatricula)) {
+                    throw new RuntimeException("El registro no pudo ser modificado en el motor de base de datos.");
+                }
+                
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw new RuntimeException("Error en la transacción de anulación: " + e.getMessage(), e);
             }
-            return null;
-        }, null);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error de conexión a la base de datos: " + e.getMessage(), e);
+        }
     }
     
     private void generarYAsignarCodigo(Matricula matricula, IMatriculaDAO matriculaDAO) {

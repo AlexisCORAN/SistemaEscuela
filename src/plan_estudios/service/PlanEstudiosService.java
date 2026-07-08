@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import plan_estudios.dao.*;
 import plan_estudios.model.*;
-import shared.TransactionRunner;
 
 /**
  *
@@ -54,71 +53,71 @@ public class PlanEstudiosService {
         }
     }
 
-    public void registrarCurso(Curso curso) {
-        TransactionRunner.ejecutar(conn -> {
+    public void registrarCurso(Curso curso) throws Exception {
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
             ICursoDAO cursoDAO = new CursoDAOImpl(conn);
             generarYAsignarCodigo(curso, cursoDAO);
             curso.setActivo(true);
-            
+
             if (!cursoDAO.insertar(curso)) {
-                throw new RuntimeException("Error al registrar el curso en la base de datos.");
+                throw new Exception("Error al registrar el curso en la base de datos.");
             }
-            return null;
-        }, null);
+        } catch (SQLException e) {
+            throw new Exception("Error de conexión al registrar el curso: " + e.getMessage(), e);
+        }
     }
 
-    public void actualizarCurso(Curso curso) {
-        TransactionRunner.ejecutar(conn -> {
+    public void actualizarCurso(Curso curso) throws Exception {
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
             ICursoDAO cursoDAO = new CursoDAOImpl(conn);
-            if (!cursoDAO.actualizar(curso)) {
-                throw new RuntimeException("Error al actualizar el curso.");
-            }
-            return null;
-        }, null);
-    }
 
-    public void procesarBajaPorCodigo(String codigoCurso) {
-        TransactionRunner.ejecutar(conn -> {
+            if (!cursoDAO.actualizar(curso)) {
+                throw new Exception("Error al actualizar el curso.");
+            }
+        } catch (SQLException e) {
+            throw new Exception("Error de conexión al actualizar curso: " + e.getMessage(), e);
+        }
+    }
+    
+    public void procesarBajaPorCodigo(String codigoCurso) throws Exception {
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
             ICursoDAO cursoDAO = new CursoDAOImpl(conn);
             Curso curso = cursoDAO.buscarPorCodigo(codigoCurso);
-
             if (curso == null) {
                 throw new IllegalArgumentException("No se encontró el curso con código: " + codigoCurso);
             }
             if (!curso.isActivo()) {
                 throw new IllegalArgumentException("El curso ya se encuentra dado de baja.");
             }
-            curso.setActivo(false); 
-
+            curso.setActivo(false);
             if (!cursoDAO.actualizar(curso)) {
-                throw new RuntimeException("Error al dar de baja en la base de datos.");
-            }            
-            return null;
-        }, null);
+                throw new Exception("Error al dar de baja en la base de datos.");
+            }
+        } catch (SQLException e) {
+            throw new Exception("Error de conexión al dar de baja el curso: " + e.getMessage(), e);
+        }
     }
-
-    public void procesarReactivacionPorCodigo(String codigoCurso) {
-        TransactionRunner.ejecutar(conn -> {
+    
+    
+    public void procesarReactivacionPorCodigo(String codigoCurso) throws Exception {
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
             ICursoDAO cursoDAO = new CursoDAOImpl(conn);
             Curso curso = cursoDAO.buscarPorCodigo(codigoCurso);
-
             if (curso == null) {
                 throw new IllegalArgumentException("No se encontró el curso con código: " + codigoCurso);
             }
-            
             if (curso.isActivo()) {
                 throw new IllegalArgumentException("El curso ya se encuentra activo.");
             }
-
-            curso.setActivo(true); 
-
+            curso.setActivo(true);
             if (!cursoDAO.actualizar(curso)) {
-                throw new RuntimeException("Error al reactivar en la base de datos.");
+                throw new Exception("Error al reactivar en la base de datos.");
             }
-            return null;
-        }, null);
+        } catch (SQLException e) {
+            throw new Exception("Error de conexión al dar de baja el curso: " + e.getMessage(), e);
+        }
     }
-
+    
     public List<Grado> obtenerGradosActivos() {
         try (Connection conn = ConexionDB.getInstance().getConexion()) {
             IGradoDAO gradoDAO = new GradoDAOImpl(conn);

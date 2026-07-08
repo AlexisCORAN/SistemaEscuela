@@ -33,7 +33,7 @@ public class AlumnoController {
             return null;
         } catch (IllegalArgumentException e) {
             return e.getMessage();
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             return "Ocurrió un error en la base de datos: " + e.getMessage();
         }
     }
@@ -44,7 +44,7 @@ public class AlumnoController {
             return null;
         } catch (IllegalArgumentException e) {
             return e.getMessage();
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             return "Ocurrió un error en la base de datos: " + e.getMessage();
         }
     }
@@ -55,7 +55,7 @@ public class AlumnoController {
             return null; 
         } catch (IllegalArgumentException e) {
             return e.getMessage(); 
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             logger.log(java.util.logging.Level.SEVERE, "Error al dar de baja al alumno con código " + codigo, e);
             return "Error del sistema: " + e.getMessage();
         }
@@ -67,7 +67,7 @@ public class AlumnoController {
             return null; 
         } catch (IllegalArgumentException e) {
             return e.getMessage(); 
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             logger.log(java.util.logging.Level.SEVERE, "Error al reactivar al alumno con código " + codigo, e);
             return "Error del sistema: " + e.getMessage();
         }

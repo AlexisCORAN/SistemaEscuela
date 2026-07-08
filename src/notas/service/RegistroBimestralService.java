@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.sql.SQLException;
 import notas.dao.EvaluacionDAOImpl;
 import notas.dao.IEvaluacionDAO;
 import notas.dao.IRegistroBimestralDAO;
@@ -28,23 +29,30 @@ public class RegistroBimestralService {
 
     public RegistroBimestral obtenerRegistroPorId(Integer id) throws Exception {
         if (id == null) return null;
-        Connection conn = ConexionDB.getInstance().getConexion();
-        IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
-        return registroDAO.obtenerPorId(id);
+
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
+            return registroDAO.obtenerPorId(id);
+        } catch (SQLException e) {
+            throw new Exception("Error al obtener el registro por ID", e);
+        }
     }
 
     public List<Object[]> obtenerNotasParaGrilla(Integer idGrado, Integer idCurso, int bimestre) throws Exception {
         if (idGrado == null || idCurso == null || bimestre < 1) {
-            throw new IllegalArgumentException("Datos de filtro inválidos para la carga de alumnos.");
+            throw new IllegalArgumentException("Datos de filtro inválidos.");
         }
 
-        Connection conn = ConexionDB.getInstance().getConexion();
-        IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
+            List<Object[]> filasBD = registroDAO.listarNotasParaTabla(idGrado, idCurso, bimestre);
 
-        List<Object[]> filasBD = registroDAO.listarNotasParaTabla(idGrado, idCurso, bimestre);
-        if (filasBD.isEmpty()) return new ArrayList<>();
+            if (filasBD.isEmpty()) return new ArrayList<>();
 
-        return procesarFilasParaGrilla(filasBD);
+            return procesarFilasParaGrilla(filasBD);
+        } catch (SQLException e) {
+            throw new Exception("Error al obtener notas para la grilla", e);
+        }
     }
 
     private List<Object[]> procesarFilasParaGrilla(List<Object[]> filasBD) {
@@ -113,39 +121,37 @@ public class RegistroBimestralService {
             throw new IllegalArgumentException("Datos insuficientes para guardar.");
         }
 
-        Connection conn = null;
-        try {
-            conn = ConexionDB.getInstance().getConexion();
-            conn.setAutoCommit(false); 
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            conn.setAutoCommit(false);
 
-            IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
-            IEvaluacionDAO evaluacionDAO = new EvaluacionDAOImpl(conn);
+            try {
+                IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
+                IEvaluacionDAO evaluacionDAO = new EvaluacionDAOImpl(conn);
 
-            RegistroBimestral registroReal = registroDAO.obtenerPorId(idRegistro);
-            if (registroReal == null) throw new IllegalStateException("El registro especificado no existe.");
-            if (!registroReal.isActivo()) throw new IllegalStateException("El bimestre está cerrado.");
+                RegistroBimestral registroReal = registroDAO.obtenerPorId(idRegistro);
+                if (registroReal == null) throw new IllegalStateException("El registro especificado no existe.");
+                if (!registroReal.isActivo()) throw new IllegalStateException("El bimestre está cerrado.");
 
-            for (Evaluacion modificada : evaluacionesModificadas) {
-                if (modificada.getId() != null) {
-                    evaluacionDAO.actualizar(modificada);
-                } else {
-                    evaluacionDAO.insertarConCabecera(modificada, idRegistro);
+                for (Evaluacion modificada : evaluacionesModificadas) {
+                    if (modificada.getId() != null) {
+                        evaluacionDAO.actualizar(modificada);
+                    } else {
+                        evaluacionDAO.insertarConCabecera(modificada, idRegistro);
+                    }
                 }
+
+                List<Evaluacion> listaActualizada = evaluacionDAO.listarPorRegistroBimestral(idRegistro);
+                double nuevoPromedio = registroReal.calcularPromedio(listaActualizada);
+
+                if (registroReal.getMatriculaCurso() != null) {
+                    registroDAO.actualizarNotaFinalMatriculaCurso(registroReal.getMatriculaCurso().getId(), nuevoPromedio);
+                }
+
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw new Exception("Error transaccional al guardar las notas: " + e.getMessage(), e);
             }
-
-            List<Evaluacion> listaActualizada = evaluacionDAO.listarPorRegistroBimestral(idRegistro);
-            double nuevoPromedio = registroReal.calcularPromedio(listaActualizada); 
-
-            if (registroReal.getMatriculaCurso() != null) {
-                registroDAO.actualizarNotaFinalMatriculaCurso(registroReal.getMatriculaCurso().getId(), nuevoPromedio);
-            }
-
-            conn.commit(); 
-        } catch (Exception e) {
-            if (conn != null) conn.rollback(); 
-            throw new Exception("Error transaccional al guardar las notas: " + e.getMessage());
-        } finally {
-            if (conn != null) conn.setAutoCommit(true);
         }
     }
 
@@ -154,91 +160,101 @@ public class RegistroBimestralService {
             throw new IllegalArgumentException("IDs inválidos para la eliminación.");
         }
 
-        Connection conn = null;
-        try {
-            conn = ConexionDB.getInstance().getConexion();
-            conn.setAutoCommit(false); 
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            conn.setAutoCommit(false);
 
-            IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
-            IEvaluacionDAO evaluacionDAO = new EvaluacionDAOImpl(conn);
-            
-            RegistroBimestral registroReal = registroDAO.obtenerPorId(idRegistro);
+            try {
+                IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
+                IEvaluacionDAO evaluacionDAO = new EvaluacionDAOImpl(conn);
 
-            if (registroReal == null) {
-                throw new IllegalStateException("El registro especificado no existe.");
+                RegistroBimestral registroReal = registroDAO.obtenerPorId(idRegistro);
+
+                if (registroReal == null) {
+                    throw new IllegalStateException("El registro especificado no existe.");
+                }
+
+                if (!registroReal.isActivo()) {
+                    throw new IllegalStateException("No se pueden eliminar notas de un bimestre cerrado.");
+                }
+
+                evaluacionDAO.eliminar(idEvaluacion);
+
+                List<Evaluacion> listaActualizada = evaluacionDAO.listarPorRegistroBimestral(idRegistro);
+                double nuevoPromedio = registroReal.calcularPromedio(listaActualizada);
+
+                if (registroReal.getMatriculaCurso() != null) {
+                    registroDAO.actualizarNotaFinalMatriculaCurso(registroReal.getMatriculaCurso().getId(), nuevoPromedio);
+                }
+
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw new Exception("Error al eliminar la evaluación: " + e.getMessage(), e);
             }
-
-            if (!registroReal.isActivo()) {
-                throw new IllegalStateException("No se pueden eliminar notas de un bimestre cerrado.");
-            }
-
-            evaluacionDAO.eliminar(idEvaluacion);
-                
-            List<Evaluacion> listaActualizada = evaluacionDAO.listarPorRegistroBimestral(idRegistro);
-            double nuevoPromedio = registroReal.calcularPromedio(listaActualizada);
-            
-            if (registroReal.getMatriculaCurso() != null) {
-                registroDAO.actualizarNotaFinalMatriculaCurso(registroReal.getMatriculaCurso().getId(), nuevoPromedio);
-            }
-
-            conn.commit(); 
-        } catch (Exception e) {
-            if (conn != null) conn.rollback();
-            throw new Exception("Error al eliminar la evaluación: " + e.getMessage());
-        } finally {
-            if (conn != null) conn.setAutoCommit(true);
-        }
+        } 
     }
 
     public List<Evaluacion> obtenerEvaluacionesPorRegistro(Integer idRegistroBimestral) throws Exception {
-        if (idRegistroBimestral == null) return Collections.emptyList();
-        Connection conn = ConexionDB.getInstance().getConexion();
-        IEvaluacionDAO evaluacionDAO = new EvaluacionDAOImpl(conn);
-        return evaluacionDAO.listarPorRegistroBimestral(idRegistroBimestral);
+        if (idRegistroBimestral == null) {
+            return Collections.emptyList();
+        }
+
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            IEvaluacionDAO evaluacionDAO = new EvaluacionDAOImpl(conn);
+            return evaluacionDAO.listarPorRegistroBimestral(idRegistroBimestral);
+        } catch (SQLException e) {
+            throw new Exception("Error al obtener las evaluaciones del registro: " + idRegistroBimestral, e);
+        }
     }
 
     
-
     public void cerrarBimestre(Integer idRegistro) throws Exception {
-        if (idRegistro == null) throw new IllegalArgumentException("ID de registro no proporcionado.");
-        
-        Connection conn = null;
-        try {
-            conn = ConexionDB.getInstance().getConexion();
+        if (idRegistro == null) {
+            throw new IllegalArgumentException("ID de registro no proporcionado.");
+        }
+
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
             conn.setAutoCommit(false);
-            
-            IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
-            RegistroBimestral registroReal = registroDAO.obtenerPorId(idRegistro);
-            
-            if (registroReal != null) {
-                registroReal.cerrarRegistro(); 
-                registroDAO.actualizar(registroReal);
+
+            try {
+                IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
+                RegistroBimestral registroReal = registroDAO.obtenerPorId(idRegistro);
+
+                if (registroReal != null) {
+                    registroReal.cerrarRegistro();
+                    registroDAO.actualizar(registroReal);
+                }
+
+                conn.commit(); 
+            } catch (Exception e) {
+                conn.rollback();
+                throw new Exception("Error al cerrar el bimestre: " + e.getMessage(), e);
             }
-            
-            conn.commit();
-        } catch (Exception e) {
-            if (conn != null) conn.rollback();
-            throw new Exception("Error al cerrar el bimestre: " + e.getMessage());
-        } finally {
-            if (conn != null) conn.setAutoCommit(true);
         }
     }
+    
 
     public List<Object[]> obtenerReporteRiesgo(Integer idGrado, int bimestre) throws Exception {
-        if (idGrado == null || bimestre < 1) throw new IllegalArgumentException("Parámetros obligatorios faltantes.");
-        Connection conn = ConexionDB.getInstance().getConexion();
-        IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
-        List<Object[]> riesgoBD = registroDAO.listarAlumnosEnRiesgo(idGrado, bimestre);
-
-        List<Object[]> filasReporte = new ArrayList<>();
-        for (Object[] fila : riesgoBD) {
-            filasReporte.add(new Object[]{
-                fila[0], fila[1], fila[2],
-                Math.round((double) fila[3] * 100.0) / 100.0,
-                "REQUIERE REFUERZO"
-            });
+        if (idGrado == null || bimestre < 1) {
+            throw new IllegalArgumentException("Parámetros obligatorios faltantes.");
         }
-        return filasReporte;
+
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            IRegistroBimestralDAO registroDAO = new RegistroBimestralDAOImpl(conn);
+            List<Object[]> riesgoBD = registroDAO.listarAlumnosEnRiesgo(idGrado, bimestre);
+
+            List<Object[]> filasReporte = new ArrayList<>();
+            for (Object[] fila : riesgoBD) {
+                filasReporte.add(new Object[]{
+                    fila[0], fila[1], fila[2],
+                    Math.round((double) fila[3] * 100.0) / 100.0,
+                    "REQUIERE REFUERZO"
+                });
+            }
+            return filasReporte;
+        } catch (SQLException e) {
+            throw new Exception("Error al generar el reporte de riesgo: " + e.getMessage(), e);
+        }
     }
     
     

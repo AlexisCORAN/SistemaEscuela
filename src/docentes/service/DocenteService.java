@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.sql.Connection;
 import java.sql.SQLException;
-import shared.TransactionRunner;
 
 /**
  *
@@ -59,29 +58,49 @@ public class DocenteService {
 
 
     public void registrarDocente(Docente docente) {
-        
         validarExistenciaDnis(docente.getDni(), null);
 
-        TransactionRunner.ejecutar(conn -> {
-            IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
-            generarYAsignarCodigo(docente, docenteDAO);
-            if (!docenteDAO.insertar(docente)) {
-                throw new RuntimeException("Error al registrar el docente en la base de datos.");
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            conn.setAutoCommit(false);
+
+            try {
+                IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
+                generarYAsignarCodigo(docente, docenteDAO);
+
+                if (!docenteDAO.insertar(docente)) {
+                    throw new RuntimeException("Error al registrar el docente en la base de datos.");
+                }
+
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw new RuntimeException("Error transaccional al registrar docente, cambios revertidos: " + e.getMessage(), e);
             }
-            return null;
-        }, null);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error de conexión al registrar docente", e);
+        }
     }
 
     public void actualizarDocente(Docente docente) {
         validarExistenciaDnis(docente.getDni(), docente.getId());
 
-        TransactionRunner.ejecutar(conn -> {
-            IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
-            if (!docenteDAO.actualizar(docente)) {
-                throw new RuntimeException("Error al actualizar los datos del docente.");
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            conn.setAutoCommit(false);
+
+            try {
+                IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
+                if (!docenteDAO.actualizar(docente)) {
+                    throw new RuntimeException("Error al actualizar los datos del docente.");
+                }
+
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw new RuntimeException("Error transaccional al actualizar docente, cambios revertidos: " + e.getMessage(), e);
             }
-            return null;
-        }, null);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error de conexión al actualizar docente", e);
+        }
     }
 
     private void generarYAsignarCodigo(Docente docente, IDocenteDAO docenteDAO) {
@@ -111,7 +130,9 @@ public class DocenteService {
     }
     
     public void procesarBajaPorCodigo(String codigoDocente) {
-        TransactionRunner.ejecutar(conn -> {
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            conn.setAutoCommit(false);
+
             IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
             Docente docente = docenteDAO.buscarPorCodigo(codigoDocente);
 
@@ -121,24 +142,29 @@ public class DocenteService {
             if (!docente.isActivo()) {
                 throw new IllegalArgumentException("El docente ya se encuentra dado de baja.");
             }
+
             docente.setActivo(false); 
 
             if (!docenteDAO.actualizar(docente)) {
                 throw new RuntimeException("Error al dar de baja en la base de datos.");
-            }            
-            return null;
-        }, null);
+            }         
+
+            conn.commit();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error transaccional al procesar baja de docente: " + e.getMessage(), e);
+        }
     }
 
     public void procesarReactivacionPorCodigo(String codigoDocente) {
-        TransactionRunner.ejecutar(conn -> {
+        try (Connection conn = ConexionDB.getInstance().getConexion()) {
+            conn.setAutoCommit(false);
+
             IDocenteDAO docenteDAO = new DocenteDAOImpl(conn);
             Docente docente = docenteDAO.buscarPorCodigo(codigoDocente);
 
             if (docente == null) {
                 throw new IllegalArgumentException("No se encontró el docente con código: " + codigoDocente);
             }
-            
             if (docente.isActivo()) {
                 throw new IllegalArgumentException("El docente ya se encuentra activo.");
             }
@@ -148,7 +174,10 @@ public class DocenteService {
             if (!docenteDAO.actualizar(docente)) {
                 throw new RuntimeException("Error al reactivar en la base de datos.");
             }
-            return null;
-        }, null);
+
+            conn.commit();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error transaccional al procesar reactivación de docente: " + e.getMessage(), e);
+        }
     }
 }
